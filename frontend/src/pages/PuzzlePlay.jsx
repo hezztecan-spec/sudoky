@@ -13,8 +13,8 @@ export default function PuzzlePlay() {
   const nav = useNavigate();
   const [puzzle, setPuzzle] = useState(null);
   const [value, setValue] = useState('');
-  const [selected, setSelected] = useState(null);       // выбранная клетка
-  const [activeDigit, setActiveDigit] = useState(null); // выбранная цифра (сначала цифра, потом клетка)
+  const [selected, setSelected] = useState(null);       // подсвеченная клетка
+  const [activeDigit, setActiveDigit] = useState(null); // выбранная цифра
   const [startedAt, setStartedAt] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -24,9 +24,10 @@ export default function PuzzlePlay() {
   // Жизни и ошибки
   const [lives, setLives] = useState(MAX_LIVES);
   const [wrongSet, setWrongSet] = useState(() => new Set());
+  const [lockedSet, setLockedSet] = useState(() => new Set()); // правильно поставленные — нельзя менять
   const [gameOver, setGameOver] = useState(false);
 
-  // Бафф подсветки
+  // Бафф подсветки (подсвечивает одинаковые цифры всегда, даже без выбора клетки)
   const [hintMode, setHintMode] = useState(false);
 
   const initing = useRef(false);
@@ -51,90 +52,78 @@ export default function PuzzlePlay() {
     loadPuzzle();
   }, [loadPuzzle]);
 
-  // Когда игрок кликает на клетку — если есть activeDigit, ставим цифру
+  // Клик по клетке: если цифра выбрана — ставим
   const handleCellClick = useCallback(
     async (idx) => {
       if (!puzzle || result || gameOver) return;
       setSelected(idx);
 
-      // Если цифра уже выбрана и клетка пустая — ставим
-      if (activeDigit !== null && puzzle.puzzle[idx] === '0') {
+      // Если цифра выбрана, клетка пустая и не заблокирована — ставим
+      if (activeDigit !== null && activeDigit !== 0 && puzzle.puzzle[idx] === '0' && !lockedSet.has(idx)) {
         await placeDigit(idx, activeDigit);
       }
-    },
-    [puzzle, result, gameOver, activeDigit]
-  );
-
-  // Ставим цифру в клетку
-  const placeDigit = async (idx, num) => {
-    if (!puzzle || puzzle.puzzle[idx] !== '0') return;
-
-    if (num === 0) {
-      // стирание
-      setValue((prev) => prev.slice(0, idx) + '0' + prev.slice(idx + 1));
-      setWrongSet((prev) => {
-        if (!prev.has(idx)) return prev;
-        const next = new Set(prev);
-        next.delete(idx);
-        return next;
-      });
-      return;
-    }
-
-    setValue((prev) => prev.slice(0, idx) + String(num) + prev.slice(idx + 1));
-
-    try {
-      const { correct } = await api.checkCell(id, idx, String(num));
-      if (!correct) {
-        setWrongSet((prev) => new Set(prev).add(idx));
-        setLives((prev) => {
-          const next = prev - 1;
-          if (next <= 0) setGameOver(true);
-          return Math.max(0, next);
-        });
-      } else {
+      // Стирание: activeDigit === 0, клетка не фиксированная и не заблокированная
+      if (activeDigit === 0 && puzzle.puzzle[idx] === '0' && !lockedSet.has(idx)) {
+        setValue((prev) => prev.slice(0, idx) + '0' + prev.slice(idx + 1));
         setWrongSet((prev) => {
           if (!prev.has(idx)) return prev;
           const next = new Set(prev);
           next.delete(idx);
           return next;
         });
+        // После стирания сбрасываем выбор цифры
+        setActiveDigit(null);
+      }
+    },
+    [puzzle, result, gameOver, activeDigit, lockedSet]
+  );
+
+  const placeDigit = async (idx, num) => {
+    setValue((prev) => prev.slice(0, idx) + String(num) + prev.slice(idx + 1));
+
+    try {
+      const { correct } = await api.checkCell(id, idx, String(num));
+      if (correct) {
+        // Правильно — закрепляем клетку, убираем из ошибок
+        setLockedSet((prev) => new Set(prev).add(idx));
+        setWrongSet((prev) => {
+          if (!prev.has(idx)) return prev;
+          const next = new Set(prev);
+          next.delete(idx);
+          return next;
+        });
+      } else {
+        // Неправильно — подсвечиваем красным, отнимаем жизнь
+        setWrongSet((prev) => new Set(prev).add(idx));
+        setLives((prev) => {
+          const next = prev - 1;
+          if (next <= 0) setGameOver(true);
+          return Math.max(0, next);
+        });
       }
     } catch (e) {
       console.warn('check failed', e.message);
     }
+
+    // После постановки сбрасываем выбор цифры — нужно заново выбирать
+    setActiveDigit(null);
   };
 
-  // Клик по цифровой клавиатуре: выбираем цифру.
-  // Если клетка уже выбрана и она пустая — сразу ставим.
-  const handleNumPad = useCallback(
-    async (num) => {
-      if (result || gameOver) return;
-      setActiveDigit(num === 0 ? 0 : num);
-
-      if (selected !== null && puzzle && puzzle.puzzle[selected] === '0') {
-        await placeDigit(selected, num);
-      }
-    },
-    [selected, puzzle, result, gameOver]
-  );
+  // Клик по цифровой клавиатуре: только выбираем цифру (не ставим сразу)
+  const handleNumPad = (num) => {
+    if (result || gameOver) return;
+    setActiveDigit(num);
+  };
 
   // Физическая клавиатура
   useEffect(() => {
     if (result || gameOver) return;
     const onKey = (e) => {
       if (e.key >= '1' && e.key <= '9') {
-        const num = parseInt(e.key, 10);
-        setActiveDigit(num);
-        if (selected !== null && puzzle && puzzle.puzzle[selected] === '0') {
-          placeDigit(selected, num);
-        }
+        setActiveDigit(parseInt(e.key, 10));
         e.preventDefault();
       } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
         setActiveDigit(0);
-        if (selected !== null && puzzle && puzzle.puzzle[selected] === '0') {
-          placeDigit(selected, 0);
-        }
         e.preventDefault();
       } else if (e.key === 'ArrowRight' && selected !== null && selected % 9 < 8) setSelected(selected + 1);
       else if (e.key === 'ArrowLeft' && selected !== null && selected % 9 > 0) setSelected(selected - 1);
@@ -143,14 +132,18 @@ export default function PuzzlePlay() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selected, puzzle, result, gameOver]);
+  }, [selected, result, gameOver]);
 
   const restart = async () => {
     try {
       await api.resetPuzzle(id);
       setValue(puzzle.puzzle);
-      // НЕ обновляем startedAt — время продолжает идти с первого старта
+      setStartedAt(null); // сбрасываем таймер
+      // Запрашиваем новый старт чтобы получить свежий started_at
+      const start = await api.startPuzzle(id);
+      setStartedAt(start.started_at);
       setWrongSet(new Set());
+      setLockedSet(new Set());
       setLives(MAX_LIVES);
       setGameOver(false);
       setResult(null);
@@ -232,9 +225,10 @@ export default function PuzzlePlay() {
         value={value}
         selected={selected}
         setSelected={handleCellClick}
-        onInput={() => {}} // ввод через handleCellClick
         wrongSet={wrongSet}
+        lockedSet={lockedSet}
         hintMode={hintMode}
+        activeDigit={activeDigit}
         disabled={!!result || gameOver}
       />
 
@@ -266,7 +260,7 @@ export default function PuzzlePlay() {
         <div className="card p-6 text-center space-y-3 animate-pop">
           <p className="text-4xl">💔</p>
           <p className="text-xl font-bold">Жизни закончились</p>
-          <p className="text-sm text-paper-600">Попробуй ещё раз — сброс не отнимает очки, только время.</p>
+          <p className="text-sm text-paper-600">Попробуй ещё раз.</p>
           <div className="flex gap-2 justify-center pt-2">
             <button className="btn-ghost" onClick={() => nav('/puzzles')}>К списку</button>
             <button className="btn" onClick={restart}>↻ Начать заново</button>
