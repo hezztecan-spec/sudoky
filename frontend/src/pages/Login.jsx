@@ -8,7 +8,7 @@ export default function Login() {
   const verify = useAuth((s) => s.verify);
   const nav = useNavigate();
 
-  const [step, setStep] = useState('phone'); // 'phone' | 'code'
+  const [step, setStep] = useState('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -72,9 +72,7 @@ export default function Login() {
       <div className="space-y-3">
         <div className="text-5xl inline-block animate-wiggle">🧩</div>
         <h1 className="text-2xl font-bold">Ну что, решаем?</h1>
-        <p className="text-ink-400 text-sm px-4">
-          Код для входа придёт в WhatsApp.
-        </p>
+        <p className="text-paper-600 text-sm px-4">Код для входа придёт в WhatsApp.</p>
       </div>
 
       <div className="card p-6 space-y-4 text-left">
@@ -93,11 +91,9 @@ export default function Login() {
                 required
                 autoFocus
               />
-              <p className="text-xs text-ink-500 mt-1">
-                В международном формате. На этот номер придёт код в WhatsApp.
-              </p>
+              <p className="text-xs text-paper-500 mt-1">В международном формате.</p>
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             <button className="btn w-full" disabled={loading}>
               {loading ? 'Отправляю…' : 'Получить код'}
             </button>
@@ -120,23 +116,23 @@ export default function Login() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 required
               />
-              <p className="text-xs text-ink-500 mt-1">Отправлено на {phone}</p>
+              <p className="text-xs text-paper-500 mt-1">Отправлено на {phone}</p>
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             <button className="btn w-full" disabled={loading || code.length !== 6}>
               {loading ? 'Проверяю…' : 'Войти'}
             </button>
             <div className="flex items-center justify-between text-xs">
               <button
                 type="button"
-                className="text-ink-400 hover:text-white"
+                className="text-paper-600 hover:text-black"
                 onClick={() => { setStep('phone'); setCode(''); setError(''); }}
               >
                 ← Другой номер
               </button>
               <button
                 type="button"
-                className="text-ink-400 hover:text-white disabled:opacity-40"
+                className="text-paper-600 hover:text-black disabled:opacity-40"
                 disabled={!!cooldown}
                 onClick={resend}
               >

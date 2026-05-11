@@ -36,7 +36,11 @@ export const api = {
   weeklyPuzzle: () => request('/puzzles/weekly', { auth: false }),
   getPuzzle: (id) => request(`/puzzles/${id}`, { auth: false }),
   startPuzzle: (id) => request(`/puzzles/${id}/start`, { method: 'POST' }),
-  submitPuzzle: (id, solution) => request(`/puzzles/${id}/submit`, { method: 'POST', body: { solution } }),
+  resetPuzzle: (id) => request(`/puzzles/${id}/reset`, { method: 'POST' }),
+  checkCell: (id, index, value) => request(`/puzzles/${id}/check`, { method: 'POST', body: { index, value } }),
+  submitPuzzle: (id, solution, hint) => request(`/puzzles/${id}/submit`, { method: 'POST', body: { solution, hint } }),
+
+  onlineUsers: () => request('/online', { auth: false }),
 
   leaderboard: () => request('/leaderboard', { auth: false }),
   achievements: () => request('/achievements'),

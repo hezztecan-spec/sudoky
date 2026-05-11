@@ -17,5 +17,5 @@ export default function Timer({ startedAt, stopped }) {
   const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
   const s = String(elapsed % 60).padStart(2, '0');
 
-  return <div className="font-mono text-xl tabular-nums tracking-wider">{m}:{s}</div>;
+  return <div className="font-mono text-xl tabular-nums tracking-wider text-paper-900">{m}:{s}</div>;
 }

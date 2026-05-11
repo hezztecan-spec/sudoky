@@ -10,6 +10,7 @@ const { broadcast } = require('../ws');
 const router = express.Router();
 
 const submitLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });
+const checkLimiter = rateLimit({ windowMs: 60 * 1000, max: 400 });
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -55,7 +56,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
   res.json(sanitizePuzzle(rows[0]));
 });
 
-// Старт попытки. Сервер запоминает started_at — клиентский таймер не влияет на подсчёт.
+// Старт попытки — сервер запоминает started_at.
 router.post('/:id/start', authRequired, async (req, res) => {
   const puzzle = await db.query(`SELECT id FROM puzzles WHERE id=$1`, [req.params.id]);
   if (!puzzle.rows[0]) return res.status(404).json({ error: 'Не найдено' });
@@ -77,9 +78,37 @@ router.post('/:id/start', authRequired, async (req, res) => {
   res.json({ started_at: rows[0].started_at, resumed: false });
 });
 
-// Отправка решения.
+// Проверка одной клетки: для подсветки ошибок в реальном времени.
+// Возвращает только boolean, не раскрывает значение решения.
+router.post('/:id/check', authRequired, checkLimiter, async (req, res) => {
+  const idx = parseInt(req.body?.index, 10);
+  const val = String(req.body?.value || '').trim();
+  if (!(idx >= 0 && idx < 81)) return res.status(400).json({ error: 'bad index' });
+  if (!/^[1-9]$/.test(val)) return res.status(400).json({ error: 'bad value' });
+
+  const { rows } = await db.query(`SELECT solution FROM puzzles WHERE id=$1`, [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Не найдено' });
+  const correct = rows[0].solution[idx] === val;
+  res.json({ correct });
+});
+
+// Reset attempt — кнопка "начать заново"
+router.post('/:id/reset', authRequired, async (req, res) => {
+  await db.query(
+    `DELETE FROM attempts WHERE user_id=$1 AND puzzle_id=$2 AND is_solved=FALSE`,
+    [req.user.id, req.params.id]
+  );
+  const { rows } = await db.query(
+    `INSERT INTO attempts (user_id, puzzle_id) VALUES ($1,$2) RETURNING started_at`,
+    [req.user.id, req.params.id]
+  );
+  res.json({ started_at: rows[0].started_at });
+});
+
+// Отправка решения. Поле hint=true уменьшает очки вдвое (бафф подсветки).
 router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
   const userSolution = normalize(req.body?.solution);
+  const hint = !!req.body?.hint;
   if (!userSolution) return res.status(400).json({ error: 'Некорректный формат решения' });
 
   const puzzleRes = await db.query(`SELECT * FROM puzzles WHERE id=$1`, [req.params.id]);
@@ -92,7 +121,6 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
   );
   let attempt = attemptRes.rows[0];
   if (!attempt) {
-    // авто-старт чтобы фиксировать время
     const ins = await db.query(
       `INSERT INTO attempts (user_id, puzzle_id) VALUES ($1,$2) RETURNING *`,
       [req.user.id, req.params.id]
@@ -101,12 +129,10 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
   }
   if (attempt.is_solved) return res.status(400).json({ error: 'Уже решено' });
 
-  // Серверный duration
   const now = new Date();
   const started = new Date(attempt.started_at);
   const durationSeconds = Math.max(1, Math.round((now - started) / 1000));
 
-  // Защита от читов: слишком быстро
   if (durationSeconds < puzzle.min_seconds) {
     return res.status(400).json({
       error: 'Слишком быстрое решение отклонено системой анти-чита',
@@ -124,12 +150,13 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
     return res.status(200).json({ ok: false, reason: check.reason, durationSeconds });
   }
 
-  const points = calcPoints({
+  let points = calcPoints({
     basePoints: puzzle.base_points,
     difficulty: puzzle.difficulty,
     durationSeconds,
     minSeconds: puzzle.min_seconds,
   });
+  if (hint) points = Math.max(1, Math.round(points / 2));
 
   await db.query(
     `UPDATE attempts
@@ -153,7 +180,7 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
   const newRank = rankForPoints(totalPoints);
   await db.query(`UPDATE users SET rank=$1 WHERE id=$2`, [newRank, req.user.id]);
 
-  // ежедневные задания — прогресс
+  // ежедневные задания
   const day = today();
   await db.query(
     `UPDATE daily_tasks
@@ -171,7 +198,6 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
       [req.user.id, day]
     );
   }
-  // награды за выполненные задания
   const completed = await db.query(
     `SELECT id, reward_points FROM daily_tasks
       WHERE user_id=$1 AND day=$2 AND is_completed=TRUE AND reward_points > 0`,
@@ -192,7 +218,6 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
     totalSolved,
   });
 
-  // realtime уведомление
   broadcast({
     type: 'leaderboard_update',
     user: { id: req.user.id, username: req.user.username },
@@ -205,6 +230,7 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
     ok: true,
     points,
     bonus,
+    hint,
     durationSeconds,
     totalPoints: totalPoints + bonus,
     rank: newRank,

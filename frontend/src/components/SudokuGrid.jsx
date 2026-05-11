@@ -1,10 +1,9 @@
 // Сетка судоку. Клетку выбираем тапом/кликом.
-// Ввод цифр идёт через пропсы onInput из родителя (через нижнюю клавиатуру),
-// а также с физической клавиатуры (на ПК).
+// wrongSet — Set индексов клеток с неправильными цифрами (для красной подсветки).
+// hintMode — бафф: подсвечивает все клетки с тем же значением что в выбранной.
 import { useEffect } from 'react';
 
-export default function SudokuGrid({ puzzle, value, selected, setSelected, onInput, disabled }) {
-  // Физическая клавиатура для десктопа
+export default function SudokuGrid({ puzzle, value, selected, setSelected, onInput, wrongSet, hintMode, disabled }) {
   useEffect(() => {
     if (disabled) return;
     const onKey = (e) => {
@@ -37,7 +36,8 @@ export default function SudokuGrid({ puzzle, value, selected, setSelected, onInp
         const sameRow = row === selRow && !isSelected;
         const sameCol = col === selCol && !isSelected;
         const sameBox = box === selBox && !isSelected && !sameRow && !sameCol;
-        const sameVal = selVal && selVal !== '0' && ch === selVal && !isSelected;
+        const sameValHint = hintMode && selVal && selVal !== '0' && ch === selVal && !isSelected;
+        const isWrong = wrongSet?.has(idx);
 
         let cls = 'sudoku-cell';
         if (isFixed) cls += ' fixed';
@@ -45,7 +45,8 @@ export default function SudokuGrid({ puzzle, value, selected, setSelected, onInp
         if (sameRow) cls += ' same-row';
         if (sameCol) cls += ' same-col';
         if (sameBox) cls += ' same-box';
-        if (sameVal) cls += ' same-value';
+        if (sameValHint) cls += ' same-value';
+        if (isWrong) cls += ' wrong';
 
         return (
           <div

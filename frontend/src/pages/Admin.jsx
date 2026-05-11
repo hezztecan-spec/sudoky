@@ -99,7 +99,7 @@ export default function Admin() {
         </form>
       </section>
 
-      {msg && <p className="text-center text-sm text-ink-300">{msg}</p>}
+      {msg && <p className="text-center text-sm text-paper-700">{msg}</p>}
     </div>
   );
 }

@@ -2,39 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
 html, body, #root { height: 100%; }
 
 body {
-  background: #0a0a0a;
-  color: #f4f4f4;
+  background: #fafafa;
+  color: #0a0a0a;
   min-height: 100dvh;
 }
 
-/* Safe area для мобилок */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
 @layer components {
   .card {
-    @apply rounded-2xl bg-ink-800 border border-white/10;
+    @apply rounded-2xl bg-white border border-paper-300 shadow-sm;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold
-           bg-white text-black transition active:scale-[0.98]
+           bg-black text-white transition active:scale-[0.98]
            disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium
-           bg-white/5 text-white border border-white/10 hover:bg-white/10 transition
+           bg-white text-black border border-paper-300 hover:bg-paper-100 transition
            disabled:opacity-40 disabled:cursor-not-allowed;
   }
-  .input {
-    @apply w-full bg-ink-800 border border-white/10 rounded-xl px-4 py-2.5 text-white
-           placeholder:text-ink-400 outline-none focus:border-white/40 transition;
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium
+           bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition;
   }
-  .label { @apply text-xs uppercase tracking-wider text-ink-400; }
-  .chip  { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-white/10 bg-white/5; }
-  .chip-solid { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-white text-black font-semibold; }
+  .input {
+    @apply w-full bg-white border border-paper-300 rounded-xl px-4 py-2.5 text-black
+           placeholder:text-paper-500 outline-none focus:border-black transition;
+  }
+  .label { @apply text-xs uppercase tracking-wider text-paper-600; }
+  .chip  { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-paper-300 bg-white; }
+  .chip-solid { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-black text-white font-semibold; }
 }
 
 /* Судоку */
@@ -47,7 +50,7 @@ body {
   max-width: 540px;
   margin-inline: auto;
   background: #000;
-  border: 2px solid #fff;
+  border: 2px solid #000;
   border-radius: 16px;
   overflow: hidden;
   touch-action: manipulation;
@@ -59,33 +62,41 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0a0a0a;
-  color: #fff;
+  background: #ffffff;
+  color: #0a0a0a;
   font-weight: 600;
   font-size: clamp(16px, 4.5vw, 26px);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid #d4d4d4;
   outline: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background .12s, color .12s, transform .08s;
 }
 .sudoku-cell:active { transform: scale(0.97); }
-.sudoku-cell.fixed  { color: #a3a3a3; background: #111; cursor: default; }
-.sudoku-cell.selected { background: #fff; color: #000; }
+.sudoku-cell.fixed  { color: #525252; background: #f4f4f4; cursor: default; }
+.sudoku-cell.selected { background: #000; color: #fff; }
 .sudoku-cell.same-row,
 .sudoku-cell.same-col,
-.sudoku-cell.same-box { background: #1a1a1a; }
+.sudoku-cell.same-box { background: #f4f4f4; }
 .sudoku-cell.same-row.fixed,
 .sudoku-cell.same-col.fixed,
-.sudoku-cell.same-box.fixed { background: #1d1d1d; }
-.sudoku-cell.same-value { background: #262626; }
-.sudoku-cell.conflict   { color: #f87171; }
+.sudoku-cell.same-box.fixed { background: #ebebeb; }
+.sudoku-cell.same-value { background: #fde68a; }  /* подсветка одинаковых цифр */
+.sudoku-cell.wrong {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  animation: shake .4s ease-in-out;
+}
 
 /* Разделители 3x3 */
 .sudoku-cell[data-col="2"],
-.sudoku-cell[data-col="5"] { border-right: 2px solid #fff; }
+.sudoku-cell[data-col="5"] { border-right: 2px solid #000; }
 .sudoku-cell[data-row="2"],
-.sudoku-cell[data-row="5"] { border-bottom: 2px solid #fff; }
+.sudoku-cell[data-row="5"] { border-bottom: 2px solid #000; }
+
+/* Сердечки жизней */
+.heart { transition: all .2s; }
+.heart.lost { opacity: 0.25; filter: grayscale(1); transform: scale(0.85); }
 
 /* Конфетти */
 .confetti-piece {
@@ -97,13 +108,13 @@ body {
   z-index: 50;
 }
 
-/* Скрыть нативный number-input spinner */
+/* Спиннеры */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
 /* Скроллбар */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #0a0a0a; }
-::-webkit-scrollbar-thumb { background: #262626; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #404040; }
+::-webkit-scrollbar-track { background: #fafafa; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }

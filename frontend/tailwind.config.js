@@ -4,16 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: {
-          50:  '#fafafa',
-          100: '#f4f4f4',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#262626',
-          800: '#171717',
+        paper: {
+          50:  '#ffffff',
+          100: '#fafafa',
+          200: '#f4f4f4',
+          300: '#e5e5e5',
+          400: '#d4d4d4',
+          500: '#a3a3a3',
+          600: '#737373',
+          700: '#525252',
+          800: '#262626',
           900: '#0a0a0a',
         },
       },
@@ -31,6 +31,13 @@ export default {
           '25%': { transform: 'rotate(-3deg)' },
           '75%': { transform: 'rotate(3deg)' },
         },
+        shake: {
+          '0%,100%': { transform: 'translateX(0)' },
+          '20%': { transform: 'translateX(-4px)' },
+          '40%': { transform: 'translateX(4px)' },
+          '60%': { transform: 'translateX(-3px)' },
+          '80%': { transform: 'translateX(3px)' },
+        },
         confetti: {
           '0%':   { transform: 'translateY(-10vh) rotate(0)', opacity: 1 },
           '100%': { transform: 'translateY(110vh) rotate(720deg)', opacity: 0 },
@@ -39,6 +46,7 @@ export default {
       animation: {
         pop: 'pop .35s ease-out',
         wiggle: 'wiggle 1.2s ease-in-out infinite',
+        shake: 'shake .4s ease-in-out',
         confetti: 'confetti 2.8s linear forwards',
       },
     },

@@ -1,33 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../api';
+import { useOnline } from '../useOnline';
 
 export default function PublicProfile() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const online = useOnline();
 
   useEffect(() => {
     api.userById(id).then(setData).catch(() => {}).finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <p className="text-center text-ink-400 pt-10">Загрузка…</p>;
-  if (!data) return <p className="text-center text-red-400 pt-10">Пользователь не найден</p>;
+  if (loading) return <p className="text-center text-paper-500 pt-10">Загрузка…</p>;
+  if (!data) return <p className="text-center text-red-600 pt-10">Пользователь не найден</p>;
 
   const { user, stats, achievements } = data;
+  const isOnline = online.some((o) => o.id === user.id);
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="card p-5 flex items-center gap-4 flex-wrap">
-        {user.picture ? (
-          <img src={user.picture} alt="" className="w-16 h-16 rounded-full" />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center text-2xl font-bold">
+        <div className="relative shrink-0">
+          <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold">
             {user.username?.[0]?.toUpperCase()}
           </div>
-        )}
+          {isOnline && (
+            <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white" />
+          )}
+        </div>
         <div>
-          <h1 className="text-xl font-bold">{user.username}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-bold">{user.username}</h1>
+            {isOnline && <span className="text-xs text-emerald-600 font-medium">● онлайн</span>}
+          </div>
           <div className="flex gap-2 mt-2 flex-wrap">
             <span className="chip-solid">{user.rank}</span>
             <span className="chip">{user.total_points} pts</span>

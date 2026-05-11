@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../store';
+import { useOnline } from '../useOnline';
 
 export default function Home() {
   const user = useAuth((s) => s.user);
   const [leaders, setLeaders] = useState([]);
+  const online = useOnline();
 
   useEffect(() => {
-    if (!user) return;
     api.leaderboard().then((d) => setLeaders(d.slice(0, 5))).catch(() => {});
-  }, [user]);
+  }, []);
 
   return (
     <div className="space-y-10">
@@ -19,34 +20,42 @@ export default function Home() {
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
           Летний чемпионат <br className="sm:hidden" /> по судоку
         </h1>
-        <p className="text-ink-400 max-w-md mx-auto text-sm sm:text-base px-4">
-          Одно судоку в день. Решил быстрее — получил больше очков.
-          Никакой магии, только циферки.
+        <p className="text-paper-600 max-w-md mx-auto text-sm sm:text-base px-4">
+          Одно судоку в день. У тебя 3 жизни — не ошибайся часто.
+          Чем быстрее и точнее — тем больше очков.
         </p>
         <div className="flex justify-center gap-3 pt-3 flex-wrap">
           {!user ? (
-            <Link to="/login" className="btn text-base px-6 py-3">Войти по WhatsApp</Link>
+            <Link to="/login" className="btn text-base px-6 py-3">Войти</Link>
           ) : (
             <Link to="/puzzles" className="btn text-base px-6 py-3">Поехали →</Link>
           )}
         </div>
+        {online.length > 0 && (
+          <p className="text-xs text-paper-600 pt-2">
+            🟢 Сейчас играют: {online.map((o) => o.username).slice(0, 5).join(', ')}
+            {online.length > 5 ? ` и ещё ${online.length - 5}` : ''}
+          </p>
+        )}
       </section>
 
-      {user && leaders.length > 0 && (
+      {leaders.length > 0 && (
         <section className="card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">🔥 Топ-5</h2>
-            <Link to="/leaderboard" className="text-sm text-ink-400 hover:text-white">Все →</Link>
+            <Link to="/leaderboard" className="text-sm text-paper-600 hover:text-black">Все →</Link>
           </div>
           <div className="space-y-1">
             {leaders.map((u, i) => (
               <Link
                 key={u.id}
                 to={`/users/${u.id}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-paper-100 transition"
               >
                 <span className="w-6 text-center font-bold">{i + 1}</span>
-                <Avatar user={u} size={8} />
+                <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  {u.username?.[0]?.toUpperCase()}
+                </span>
                 <span className="flex-1 font-medium truncate">{u.username}</span>
                 <span className="font-semibold tabular-nums">{u.total_points}</span>
               </Link>
@@ -55,20 +64,5 @@ export default function Home() {
         </section>
       )}
     </div>
-  );
-}
-
-function Avatar({ user, size = 8 }) {
-  const dim = `${size * 4}px`;
-  if (user.picture) {
-    return <img src={user.picture} alt="" className="rounded-full shrink-0" style={{ width: dim, height: dim }} />;
-  }
-  return (
-    <span
-      className="rounded-full flex items-center justify-center text-xs font-bold bg-white text-black shrink-0"
-      style={{ width: dim, height: dim }}
-    >
-      {user.username?.[0]?.toUpperCase()}
-    </span>
   );
 }

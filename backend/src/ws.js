@@ -5,11 +5,10 @@ const whatsapp = require('./whatsapp');
 let wssClients = null;
 let wssWorker = null;
 const clients = new Set();
+const online = new Map(); // userId -> { username, count }
 
 function initWebSocket(server) {
-  // Основной канал для UI (лидерборд, чат)
   wssClients = new WebSocketServer({ noServer: true });
-  // Канал для WhatsApp-воркера (локальный скрипт у разработчика)
   wssWorker = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req, socket, head) => {
@@ -37,18 +36,47 @@ function initWebSocket(server) {
         } catch { /* гости тоже допускаются */ }
         ws.user = user;
         clients.add(ws);
-        ws.on('close', () => clients.delete(ws));
+
+        if (user) {
+          const cur = online.get(user.id) || { username: user.username, count: 0 };
+          cur.count += 1;
+          cur.username = user.username;
+          online.set(user.id, cur);
+          broadcastOnline();
+        }
+
+        ws.on('close', () => {
+          clients.delete(ws);
+          if (user) {
+            const cur = online.get(user.id);
+            if (cur) {
+              cur.count -= 1;
+              if (cur.count <= 0) online.delete(user.id);
+              broadcastOnline();
+            }
+          }
+        });
         ws.on('error', () => clients.delete(ws));
+
         ws.send(JSON.stringify({
           type: 'hello',
           user: user ? { id: user.id, username: user.username } : null,
         }));
+        ws.send(JSON.stringify({ type: 'online_list', online: onlinePayload() }));
       });
       return;
     }
 
     socket.destroy();
   });
+}
+
+function onlinePayload() {
+  return Array.from(online.entries()).map(([id, v]) => ({ id, username: v.username }));
+}
+
+function broadcastOnline() {
+  broadcast({ type: 'online_list', online: onlinePayload() });
 }
 
 function broadcast(event) {
@@ -60,4 +88,6 @@ function broadcast(event) {
   }
 }
 
-module.exports = { initWebSocket, broadcast };
+function getOnline() { return onlinePayload(); }
+
+module.exports = { initWebSocket, broadcast, getOnline };

@@ -1,8 +1,13 @@
 const express = require('express');
 const db = require('../db');
 const { authRequired } = require('../middleware/auth');
+const { getOnline } = require('../ws');
 
 const router = express.Router();
+
+router.get('/online', (req, res) => {
+  res.json(getOnline());
+});
 
 router.get('/me', authRequired, async (req, res) => {
   const { rows } = await db.query(

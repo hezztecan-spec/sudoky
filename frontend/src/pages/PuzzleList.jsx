@@ -10,18 +10,18 @@ export default function PuzzleList() {
     api.listPuzzles().then(setPuzzles).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-center text-ink-400 pt-10">Загрузка…</p>;
+  if (loading) return <p className="text-center text-paper-500 pt-10">Загрузка…</p>;
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">Судоку</h1>
-      {puzzles.length === 0 && <p className="text-ink-400 text-sm">Пока ничего нет. Админ, ау!</p>}
+      {puzzles.length === 0 && <p className="text-paper-600 text-sm">Пока ничего нет. Админ, ау!</p>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {puzzles.map((p) => (
           <Link
             key={p.id}
             to={`/puzzles/${p.id}`}
-            className="card p-4 space-y-2 hover:bg-ink-700/60 transition block"
+            className="card p-4 space-y-2 hover:bg-paper-100 transition block"
           >
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold">{p.title}</h3>
@@ -31,7 +31,7 @@ export default function PuzzleList() {
               <span className="chip">{p.difficulty}</span>
               <span className="chip">{p.kind}</span>
             </div>
-            <p className="text-xs text-ink-500">
+            <p className="text-xs text-paper-500">
               {p.active_from?.slice(0, 10)} — {p.active_to?.slice(0, 10)}
             </p>
           </Link>

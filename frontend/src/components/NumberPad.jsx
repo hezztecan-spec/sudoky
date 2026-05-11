@@ -9,7 +9,7 @@ export default function NumberPad({ onInput, disabled }) {
           type="button"
           disabled={disabled}
           onClick={() => onInput(n)}
-          className="aspect-square rounded-xl bg-white text-black font-bold text-xl sm:text-2xl
+          className="aspect-square rounded-xl bg-black text-white font-bold text-xl sm:text-2xl
                      active:scale-[0.96] transition disabled:opacity-40"
         >
           {n}
@@ -20,7 +20,7 @@ export default function NumberPad({ onInput, disabled }) {
         disabled={disabled}
         onClick={() => onInput(0)}
         aria-label="Стереть"
-        className="aspect-square rounded-xl bg-white/10 border border-white/10 text-white
+        className="aspect-square rounded-xl bg-white border border-paper-300 text-paper-700
                    active:scale-[0.96] transition disabled:opacity-40"
       >
         ⌫

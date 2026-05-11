@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// Чёрно-белое конфетти: только оттенки белого
-const SHADES = ['#ffffff', '#e5e5e5', '#a3a3a3', '#d4d4d4', '#737373'];
+const SHADES = ['#0a0a0a', '#525252', '#a3a3a3', '#d4d4d4', '#737373'];
 
 export default function Confetti({ show }) {
   const [pieces, setPieces] = useState([]);
