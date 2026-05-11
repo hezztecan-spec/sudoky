@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/me', authRequired, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, email, username, is_admin, total_points, total_solved, best_time, rank, avatar_color, picture, created_at
+    `SELECT id, phone, username, is_admin, total_points, total_solved, best_time, rank, avatar_color, picture, created_at
      FROM users WHERE id=$1`,
     [req.user.id]
   );

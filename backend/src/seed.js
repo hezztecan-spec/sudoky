@@ -67,11 +67,12 @@ async function upsertPuzzles() {
 }
 
 async function promoteAdmin() {
-  const email = (process.env.ADMIN_EMAIL || '').toLowerCase();
-  if (!email) return;
-  const r = await db.query('UPDATE users SET is_admin=TRUE WHERE email=$1 RETURNING id', [email]);
-  if (r.rowCount) console.log(`[seed] promoted admin: ${email}`);
-  else console.log(`[seed] admin ${email} пока не зарегистрирован, войдёт через Google — затем пересидь.`);
+  const phone = (process.env.ADMIN_PHONE || '').replace(/\D/g, '');
+  if (!phone) return;
+  const e164 = phone.startsWith('8') ? '+7' + phone.slice(1) : phone.startsWith('+') ? phone : '+' + phone;
+  const r = await db.query('UPDATE users SET is_admin=TRUE WHERE phone=$1 RETURNING id', [e164]);
+  if (r.rowCount) console.log(`[seed] promoted admin: ${e164}`);
+  else console.log(`[seed] admin ${e164} пока не логинился — зайдёт через WhatsApp и станет админом автоматически`);
 }
 
 async function run() {

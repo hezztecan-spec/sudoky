@@ -1,161 +1,161 @@
 # 🧩 Летний чемпионат по судоку
 
-Минималистичная чёрно-белая онлайн-платформа для ежедневных судоку. Вход только через Google.
+Минималистичная чёрно-белая онлайн-платформа для ежедневных судоку. Авторизация — по номеру телефона через OTP в WhatsApp.
 
 ## ✨ Возможности
 
-- 🔐 Авторизация только через Google (Google Identity Services)
+- 🔐 Вход по номеру телефона + OTP в WhatsApp
 - 🧩 Ежедневные, еженедельные и бонусные судоку
-- ⏱ Серверный таймер + анти-чит (минимальное время прохождения)
+- ⏱ Серверный таймер + анти-чит
 - 🏆 Таблица лидеров в реальном времени (WebSocket)
 - 💎 Очки, ранги, ачивки, ежедневные задания
-- 📜 История игр и статистика в профиле
+- 📜 История игр и статистика
 - 💬 Общий чат (real-time)
-- 🛠 Админ-панель для добавления новых судоку
+- 🛠 Админ-панель
 - 🎉 Конфетти при победе
-- 📱 Адаптивно под ПК и телефон, чёрно-белая тема
+- 📱 Адаптивно, чёрно-белая тема
 
-## 🧱 Стек
+## 🧱 Архитектура
 
-- **Frontend:** React 18 + Vite + Tailwind + Zustand
-- **Backend:** Node.js 20 + Express + pg + ws + JWT + google-auth-library
-- **DB:** PostgreSQL 16
-- **Infra:** Docker + docker-compose
-
-## 🔑 Google OAuth — обязательный шаг
-
-1. Зайди в [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
-2. Создай **OAuth 2.0 Client ID** типа *Web application*.
-3. В **Authorized JavaScript origins** добавь:
-   - `http://localhost:5173`
-   - (прод: твой домен)
-4. Скопируй **Client ID** в `.env`:
-
-```env
-GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+```
+┌────────────────────┐     ┌──────────────────┐     ┌────────────────┐
+│  sudoku-web        │     │  sudoku-api      │     │  sudoku-db     │
+│  (Render Static)   │◀───▶│  (Render Web)    │◀───▶│  (Render PG)   │
+│  React + Vite      │     │  Express + WS    │     │  Postgres 16   │
+└────────────────────┘     └──────────▲───────┘     └────────────────┘
+                                      │ wss /ws/worker
+                                      │
+                          ┌───────────▼─────────┐
+                          │ WhatsApp-worker     │
+                          │ (твой ноут)         │
+                          │ whatsapp-web.js     │
+                          └─────────────────────┘
 ```
 
-Если хочешь сделать себя админом: в `.env` укажи свой Gmail в `ADMIN_EMAIL` и войди один раз через Google, затем перезапусти сид (`npm run seed` или перезапуск docker).
+- **Фронт и бэк** — на Render (бесплатный план).
+- **WhatsApp-воркер** — локальный процесс у тебя на ноуте, который отправляет OTP. На сервере не держим, потому что Chromium + WhatsApp Web требуют памяти и стабильной сессии (а на Render Free сервис засыпает).
+- Бэк и воркер связаны по WebSocket `/ws/worker` с общим секретом `WORKER_SECRET`.
 
-## 🚀 Быстрый старт (Docker)
+## 🚀 Деплой на Render
+
+### 1. Запушь репо на GitHub.
+
+### 2. Создай Blueprint на Render
+
+1. https://dashboard.render.com/blueprints → **New Blueprint Instance**
+2. Выбери репозиторий. Render прочитает `render.yaml` и предложит создать три сущности:
+   - `sudoku-db` (Postgres)
+   - `sudoku-api` (Node)
+   - `sudoku-web` (Static)
+
+### 3. Заполни переменные окружения в дашборде
+
+**sudoku-api** → Environment:
+- `ADMIN_PHONE` — твой номер в формате `+79991234567` (получит права админа при первом входе)
+
+**sudoku-web** → Environment:
+- `VITE_API_URL` = `https://sudoku-api-xxxx.onrender.com/api`  *(URL бэка, который выдаст Render)*
+- `VITE_WS_URL` = `wss://sudoku-api-xxxx.onrender.com/ws`
+
+### 4. Скопируй WORKER_SECRET
+
+На `sudoku-api` → Environment найди `WORKER_SECRET` (Render сгенерировал сам). Нажми «Show value», скопируй — пригодится воркеру.
+
+### 5. Запусти фронт-билд повторно
+
+После того как вписал `VITE_API_URL` / `VITE_WS_URL`, кликни **Manual Deploy** на `sudoku-web`, чтобы переменные попали в сборку.
+
+### 6. Запусти WhatsApp-воркер на ноуте
 
 ```bash
-git clone <repo>
-cd sudoku-championship
+cd whatsapp-worker
 cp .env.example .env
-# впиши GOOGLE_CLIENT_ID, VITE_GOOGLE_CLIENT_ID, ADMIN_EMAIL
+```
+
+Впиши в `.env`:
+```env
+BACKEND_WS=wss://sudoku-api-xxxx.onrender.com/ws/worker
+WORKER_SECRET=<тот же, что в Render>
+```
+
+```bash
+npm install
+npm start
+```
+
+При первом запуске покажет QR-код — отсканируй его в WhatsApp (Настройки → Связанные устройства → Привязать устройство). Сессия сохранится в `whatsapp-worker/.wwebjs_auth/`.
+
+### 7. Проверь
+
+- Открой `https://sudoku-web-xxxx.onrender.com`
+- Введи свой номер → получи код в WhatsApp → войди
+- На бэке в логах должно быть `[whatsapp] воркер подключён`
+
+## 🧪 Локально
+
+### DB + бэкенд в Docker
+```bash
+cp .env.example .env
 docker compose up --build
 ```
 
-- Frontend: http://localhost:5173
-- API: http://localhost:4000/api
-- WebSocket: ws://localhost:4000/ws
-
-## 🧪 Локально без Docker
-
-### Backend
+### Фронт
 ```bash
-cd backend
-cp .env.example .env   # впиши GOOGLE_CLIENT_ID и DATABASE_URL
+cd frontend
 npm install
-npm run migrate
-npm run seed
 npm run dev
 ```
 
-### Frontend
+### WhatsApp-воркер
 ```bash
-cd frontend
-VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com npm run dev
+cd whatsapp-worker
+cp .env.example .env
+# BACKEND_WS=ws://localhost:4000/ws/worker
+# WORKER_SECRET= тот же, что в .env для docker-compose
+npm install
+npm start
 ```
 
 ## 📚 Структура
 
 ```
 sudoku-championship/
-├── backend/
-│   ├── src/
-│   │   ├── routes/        # auth (google), users, puzzles, leaderboard, chat, admin ...
-│   │   ├── middleware/    # auth, admin
-│   │   ├── utils/         # sudoku, ranks, achievements
-│   │   ├── migrations/    # SQL
-│   │   ├── db.js
-│   │   ├── ws.js
-│   │   └── index.js
-│   └── package.json
-├── frontend/
-│   └── src/
-│       ├── components/    # SudokuGrid, NumberPad, Navbar, GoogleButton, Timer, Confetti
-│       ├── pages/         # Home, Login, PuzzleList, PuzzlePlay, Leaderboard, Profile, Chat, Admin, PublicProfile
-│       ├── store.js
-│       ├── api.js
-│       └── useWs.js
+├── backend/               # Express + WebSocket (Render Web)
+├── frontend/              # React + Vite + Tailwind (Render Static)
+├── whatsapp-worker/       # Локальный WhatsApp OTP-сервис
+├── render.yaml
 ├── docker-compose.yml
 └── README.md
 ```
 
 ## 🔌 REST API (ключевое)
 
-| Метод | Путь                      | Описание                               |
-| ----- | ------------------------- | -------------------------------------- |
-| POST  | `/api/auth/google`        | Логин через Google ID token            |
-| GET   | `/api/me`                 | Текущий профиль                        |
-| GET   | `/api/users/:id`          | Публичный профиль                      |
-| GET   | `/api/puzzles`            | Список судоку                          |
-| GET   | `/api/puzzles/:id`        | Судоку (без решения)                   |
-| POST  | `/api/puzzles/:id/start`  | Старт попытки (серверный таймер)       |
-| POST  | `/api/puzzles/:id/submit` | Отправить решение                      |
-| GET   | `/api/leaderboard`        | Топ игроков                            |
-| GET   | `/api/achievements`       | Ачивки                                 |
-| GET   | `/api/daily-tasks`        | Задания дня                            |
-| GET   | `/api/chat`               | История чата                           |
-| POST  | `/api/chat`               | Отправить сообщение                    |
-| POST  | `/api/admin/puzzles`      | Добавить судоку (admin)                |
-| GET   | `/api/admin/stats`        | Статистика (admin)                     |
+| Метод | Путь                             | Описание                               |
+| ----- | -------------------------------- | -------------------------------------- |
+| POST  | `/api/auth/send-code`            | Выслать OTP в WhatsApp                 |
+| POST  | `/api/auth/verify-code`          | Проверить код, выдать JWT              |
+| GET   | `/api/auth/whatsapp-status`      | Статус воркера (ready/offline)         |
+| GET   | `/api/me`                        | Профиль                                |
+| GET   | `/api/puzzles`                   | Список судоку                          |
+| POST  | `/api/puzzles/:id/start`         | Старт попытки                          |
+| POST  | `/api/puzzles/:id/submit`        | Отправить решение                      |
+| GET   | `/api/leaderboard`               | Топ игроков                            |
+| GET   | `/api/chat`                      | История чата                           |
+| POST  | `/api/admin/puzzles`             | Добавить судоку (admin)                |
 
 ## 🛡 Защита от читов
 
 - Серверная валидация решений
 - Серверный `started_at`, клиентский таймер не влияет
-- Минимальное время прохождения на каждое судоку
-- Rate-limit на submit и чат
+- Минимальное время прохождения
+- Rate-limit на submit, OTP, чат
 
-## 🌍 Деплой: Netlify (фронт) + Render (бэк + Postgres)
+## ⚠️ Ограничения
 
-### Шаг 1. Бэкенд + БД на Render
-
-1. Запушь репозиторий на GitHub.
-2. Открой https://dashboard.render.com/blueprints → **New Blueprint Instance** → выбери репозиторий.
-3. Render прочитает `render.yaml` и создаст два сервиса: Postgres `sudoku-db` и web-сервис `sudoku-api`.
-4. После создания открой `sudoku-api` → Environment → добавь значения:
-   - `GOOGLE_CLIENT_ID` — твой Google OAuth Client ID
-   - `ADMIN_EMAIL` — твой Gmail (станет админом)
-5. Дождись деплоя. URL бэка будет вида `https://sudoku-api.onrender.com`.
-6. Проверь: открой `https://sudoku-api.onrender.com/api/health` — должно вернуть JSON с `ok: true`.
-
-### Шаг 2. Фронт на Netlify
-
-1. https://app.netlify.com → **Add new site → Import from Git** → выбери тот же репозиторий.
-2. Netlify прочитает `frontend/netlify.toml` — Base `frontend`, Publish `frontend/dist`.
-3. В **Site settings → Environment variables** добавь:
-   - `VITE_API_URL` = `https://sudoku-api.onrender.com/api`
-   - `VITE_WS_URL` = `wss://sudoku-api.onrender.com/ws`
-   - `VITE_GOOGLE_CLIENT_ID` = твой Google OAuth Client ID
-4. **Deploy**. Получишь URL типа `https://твой-проект.netlify.app`.
-
-### Шаг 3. Google OAuth
-
-В [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) открой свой OAuth Client и в **Authorized JavaScript origins** добавь:
-- `https://твой-проект.netlify.app`
-- (локально оставь `http://localhost:5173`)
-
-### Нюансы бесплатного плана
-
-- **Render Free** усыпляет web-сервис после 15 минут простоя: первый запрос холодный (~30 сек). Postgres free живёт 30 дней, потом удаляется.
-- **Netlify Free** — 100 ГБ трафика/мес, больше чем хватит для демо.
-
-Для продакшена — возьми Render Starter ($7/мес) для бэка и сохрани Netlify Free для фронта.
+- **Воркер должен быть включён**, чтобы OTP приходили. Выключил ноут — никто не войдёт (кроме уже залогиненных).
+- **Render Free засыпает** через 15 минут простоя: первый запрос будет долгим (~30 сек). WebSocket воркера переподключится автоматически.
+- **Postgres Free** удаляется через 30 дней — переходи на Starter ($7/мес) для продакшена.
+- WhatsApp-автоматизация через `whatsapp-web.js` неофициальна. Для серьёзного проекта — WhatsApp Business Cloud API или Twilio.
 
 ## 📄 Лицензия
 

@@ -25,7 +25,7 @@ export default function Home() {
         </p>
         <div className="flex justify-center gap-3 pt-3 flex-wrap">
           {!user ? (
-            <Link to="/login" className="btn text-base px-6 py-3">Войти через Google</Link>
+            <Link to="/login" className="btn text-base px-6 py-3">Войти по WhatsApp</Link>
           ) : (
             <Link to="/puzzles" className="btn text-base px-6 py-3">Поехали →</Link>
           )}

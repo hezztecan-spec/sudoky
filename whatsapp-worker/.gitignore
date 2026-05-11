@@ -1,10 +1,5 @@
 node_modules
-dist
 .env
-.DS_Store
-*.log
-coverage
-.vscode
-.idea
 .wwebjs_auth
 .wwebjs_cache
+*.log

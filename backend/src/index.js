@@ -6,6 +6,7 @@ const http = require('http');
 const db = require('./db');
 const { initWebSocket } = require('./ws');
 const { ensureCatalog } = require('./utils/achievements');
+const whatsapp = require('./whatsapp');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -46,6 +47,7 @@ const PORT = process.env.PORT || 4000;
 
 async function start() {
   await ensureCatalog();
+  whatsapp.init(); // стартуем WhatsApp Web клиент (QR в консоль при первом входе)
   server.listen(PORT, () => {
     console.log(`🧩 backend on :${PORT}`);
   });

@@ -1,6 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 export const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000/ws';
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function getToken() {
   return localStorage.getItem('token') || '';
@@ -23,7 +22,11 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 }
 
 export const api = {
-  loginGoogle: (credential) => request('/auth/google', { method: 'POST', body: { credential }, auth: false }),
+  sendCode: (phone) => request('/auth/send-code', { method: 'POST', body: { phone }, auth: false }),
+  verifyCode: (phone, code) => request('/auth/verify-code', { method: 'POST', body: { phone, code }, auth: false }),
+  updateUsername: (username) => request('/auth/update-username', { method: 'POST', body: { username } }),
+  whatsappStatus: () => request('/auth/whatsapp-status', { auth: false }),
+
   me: () => request('/me'),
   userById: (id) => request(`/users/${id}`, { auth: false }),
   history: () => request('/history'),

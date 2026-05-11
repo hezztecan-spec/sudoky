@@ -20,8 +20,8 @@ export const useAuth = create((set, get) => ({
     }
   },
 
-  async loginWithGoogle(credential) {
-    const { token, user } = await api.loginGoogle(credential);
+  async verify(phone, code) {
+    const { token, user } = await api.verifyCode(phone, code);
     localStorage.setItem('token', token);
     set({ token, user });
   },
@@ -30,4 +30,6 @@ export const useAuth = create((set, get) => ({
     localStorage.removeItem('token');
     set({ token: '', user: null });
   },
+
+  setUser(user) { set({ user }); },
 }));

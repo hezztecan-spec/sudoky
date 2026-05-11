@@ -28,7 +28,7 @@ export default function Profile() {
         )}
         <div className="flex-1 min-w-[180px]">
           <h1 className="text-xl font-bold">{user.username}</h1>
-          <p className="text-sm text-ink-400 truncate">{user.email}</p>
+          <p className="text-sm text-ink-400 truncate">{user.phone}</p>
           <div className="flex gap-2 mt-2 flex-wrap">
             <span className="chip-solid">{user.rank}</span>
             <span className="chip">{user.total_points} pts</span>
