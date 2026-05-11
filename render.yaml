@@ -1,0 +1,36 @@
+# Render Blueprint: PostgreSQL + Node.js backend с WebSocket.
+# Подключи репозиторий на https://dashboard.render.com/blueprints и Render сам создаст оба сервиса.
+
+databases:
+  - name: sudoku-db
+    databaseName: sudoku_championship
+    user: sudoku
+    plan: free
+    postgresMajorVersion: 16
+
+services:
+  - type: web
+    name: sudoku-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci && node src/migrate.js && node src/seed.js
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: GOOGLE_CLIENT_ID
+        sync: false        # задашь вручную в dashboard
+      - key: ADMIN_EMAIL
+        sync: false        # задашь вручную в dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sudoku-db
+          property: connectionString
