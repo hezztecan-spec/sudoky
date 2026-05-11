@@ -6,7 +6,7 @@ databases:
     databaseName: sudoku_championship
     user: sudoku
     plan: free
-    postgresMajorVersion: 16
+    postgresMajorVersion: "16"
 
 services:
   # Backend (Express + WebSocket)
@@ -36,12 +36,11 @@ services:
           name: sudoku-db
           property: connectionString
 
-  # Frontend (Vite static site)
+  # Frontend (Vite static site). У static sites нет поля plan — они бесплатные.
   - type: web
     name: sudoku-web
     runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
