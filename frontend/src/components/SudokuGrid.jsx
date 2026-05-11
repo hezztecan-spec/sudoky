@@ -1,13 +1,12 @@
 // Сетка судоку.
-// lockedSet — правильно поставленные клетки (нельзя менять, показываем как fixed).
-// hintMode + activeDigit — подсвечивает все клетки с цифрой activeDigit (даже без выбора клетки).
+// hintMode + activeDigit — подсвечивает ВСЕ клетки с цифрой activeDigit (fixed, locked, user-placed).
 
 export default function SudokuGrid({ puzzle, value, selected, setSelected, wrongSet, lockedSet, hintMode, activeDigit, disabled }) {
   const selRow = selected != null ? Math.floor(selected / 9) : -1;
   const selCol = selected != null ? selected % 9 : -1;
   const selBox = selected != null ? Math.floor(selRow / 3) * 3 + Math.floor(selCol / 3) : -1;
 
-  // Для подсветки: если hintMode включён, подсвечиваем по activeDigit (выбранная цифра на панели)
+  // Подсветка: по activeDigit (выбранная цифра на панели)
   const highlightVal = hintMode && activeDigit && activeDigit !== 0 ? String(activeDigit) : null;
 
   return (
@@ -24,16 +23,20 @@ export default function SudokuGrid({ puzzle, value, selected, setSelected, wrong
         const sameRow = row === selRow && !isSelected;
         const sameCol = col === selCol && !isSelected;
         const sameBox = box === selBox && !isSelected && !sameRow && !sameCol;
-        const sameValHint = highlightVal && ch === highlightVal && !isSelected;
+        // Подсвечиваем ВСЕ клетки с этой цифрой (включая fixed)
+        const sameValHint = highlightVal && ch === highlightVal;
         const isWrong = wrongSet?.has(idx);
 
         let cls = 'sudoku-cell';
-        if (isFixed) cls += ' fixed';
+        if (isFixed && !sameValHint) cls += ' fixed';
+        if (isFixed && sameValHint) cls += ' fixed same-value';
+        if (!isFixed && sameValHint && !isSelected) cls += ' same-value';
         if (isSelected) cls += ' selected';
-        if (sameRow) cls += ' same-row';
-        if (sameCol) cls += ' same-col';
-        if (sameBox) cls += ' same-box';
-        if (sameValHint) cls += ' same-value';
+        if (!isSelected && !sameValHint) {
+          if (sameRow) cls += ' same-row';
+          if (sameCol) cls += ' same-col';
+          if (sameBox) cls += ' same-box';
+        }
         if (isWrong) cls += ' wrong';
 
         return (

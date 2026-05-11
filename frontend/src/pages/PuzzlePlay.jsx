@@ -238,6 +238,7 @@ export default function PuzzlePlay() {
             onInput={handleNumPad}
             disabled={false}
             activeDigit={activeDigit}
+            value={value}
           />
           <div className="flex gap-2 justify-center pt-1 flex-wrap">
             <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>
