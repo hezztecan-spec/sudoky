@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import MobileNav from './components/MobileNav';
 import InstallPrompt from './components/InstallPrompt';
 import ChallengePopup from './components/ChallengePopup';
 import Home from './pages/Home';
@@ -21,6 +22,9 @@ import Memory from './pages/Memory';
 import Feed from './pages/Feed';
 import Wordle from './pages/Wordle';
 import Battleship from './pages/Battleship';
+import Game2048 from './pages/Game2048';
+import Minesweeper from './pages/Minesweeper';
+import Shop from './pages/Shop';
 import { useAuth } from './store';
 import { useTheme } from './useTheme';
 
@@ -61,6 +65,9 @@ export default function App() {
           <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
           <Route path="/memory" element={<Protected><Memory /></Protected>} />
           <Route path="/wordle" element={<Protected><Wordle /></Protected>} />
+          <Route path="/2048" element={<Protected><Game2048 /></Protected>} />
+          <Route path="/minesweeper" element={<Protected><Minesweeper /></Protected>} />
+          <Route path="/shop" element={<Protected><Shop /></Protected>} />
 
           {/* Общее */}
           <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
@@ -74,6 +81,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <MobileNav />
     </div>
   );
 }

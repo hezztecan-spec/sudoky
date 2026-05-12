@@ -82,6 +82,15 @@ export const api = {
   submitMemory: (moves, seconds, pairs) => request('/minigames/memory/submit', { method: 'POST', body: { moves, seconds, pairs } }),
   submitWordle: (attempts, won) => request('/minigames/wordle/submit', { method: 'POST', body: { attempts, won } }),
 
+  // shop
+  shopItems: () => request('/shop/items', { auth: false }),
+  shopMy: () => request('/shop/my'),
+  shopBuy: (code) => request('/shop/buy', { method: 'POST', body: { code } }),
+  shopEquip: (code) => request('/shop/equip', { method: 'POST', body: { code } }),
+
+  // game chat
+  gameChat: (sessionId, message) => request(`/games/session/${sessionId}/chat`, { method: 'POST', body: { message } }),
+
   // admin users
   adminUsers: () => request('/admin/users'),
   adminGetUser: (id) => request(`/admin/users/${id}`),

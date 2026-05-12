@@ -32,6 +32,7 @@ export default function Navbar() {
           <NavLink to="/sudoku" className={linkClass}>Судоку</NavLink>
           <NavLink to="/games" className={linkClass}>Мини-игры</NavLink>
           <NavLink to="/leaderboard" className={linkClass}>Рейтинг</NavLink>
+          <NavLink to="/shop" className={linkClass}>🛒</NavLink>
           <NavLink to="/players" className={linkClass}>Игроки</NavLink>
           <NavLink to="/feed" className={linkClass}>Лента</NavLink>
           <NavLink to="/chat" className={linkClass}>Чат</NavLink>

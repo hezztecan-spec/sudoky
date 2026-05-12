@@ -169,6 +169,28 @@ router.post('/session/:id/move', authRequired, async (req, res) => {
   });
 });
 
+// Мини-чат в партии (быстрые эмодзи/сообщения)
+router.post('/session/:id/chat', authRequired, async (req, res) => {
+  const msg = String(req.body?.message || '').slice(0, 100);
+  if (!msg) return res.status(400).json({ error: 'Пустое сообщение' });
+
+  const { rows } = await db.query(`SELECT player1_id, player2_id FROM game_sessions WHERE id=$1`, [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+  if (rows[0].player1_id !== req.user.id && rows[0].player2_id !== req.user.id) {
+    return res.status(403).json({ error: 'Не участник' });
+  }
+
+  broadcast({
+    type: 'game_chat',
+    sessionId: req.params.id,
+    userId: req.user.id,
+    username: req.user.username,
+    message: msg,
+  });
+
+  res.json({ ok: true });
+});
+
 // Рейтинг по игре
 router.get('/leaderboard/:gameType', async (req, res) => {
   const { rows } = await db.query(

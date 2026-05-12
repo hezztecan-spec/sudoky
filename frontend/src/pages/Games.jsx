@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 
 const GAMES = [
   { id: 'tictactoe', name: 'Крестики-нолики', emoji: '❌', desc: 'Классика с другом', path: '/tictactoe' },
+  { id: 'battleship', name: 'Морской бой', emoji: '🚢', desc: 'Потопи флот друга', path: '/battleship' },
+  { id: '2048', name: '2048', emoji: '🔢', desc: 'Собери 2048 свайпами', path: '/2048' },
+  { id: 'minesweeper', name: 'Сапёр', emoji: '💣', desc: 'Не наступи на мину', path: '/minesweeper' },
   { id: 'reaction', name: 'Реакция', emoji: '⚡', desc: 'Проверь скорость', path: '/reaction' },
   { id: 'memory', name: 'Память', emoji: '🃏', desc: 'Найди пары карточек', path: '/memory' },
   { id: 'wordle', name: 'Слова', emoji: '📝', desc: 'Угадай слово за 6 попыток', path: '/wordle' },
-  { id: 'battleship', name: 'Морской бой', emoji: '🚢', desc: 'Потопи флот друга', path: '/battleship' },
 ];
 
 export default function Games() {
