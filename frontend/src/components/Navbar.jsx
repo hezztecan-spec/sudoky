@@ -16,7 +16,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 border-b border-paper-300 bg-white/90 backdrop-blur">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-2">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl">🎮</span>
+          <span className="text-xl">🧩</span>
           <span className="font-bold tracking-tight">играй.лето</span>
         </Link>
 
@@ -29,7 +29,8 @@ export default function Navbar() {
         </div>
 
         <nav className="ml-auto flex items-center gap-1 overflow-x-auto no-scrollbar">
-          <NavLink to="/" className={linkClass} end>Игры</NavLink>
+          <NavLink to="/sudoku" className={linkClass}>Судоку</NavLink>
+          <NavLink to="/games" className={linkClass}>Мини-игры</NavLink>
           <NavLink to="/leaderboard" className={linkClass}>Рейтинг</NavLink>
           <NavLink to="/players" className={linkClass}>Игроки</NavLink>
           <NavLink to="/chat" className={linkClass}>Чат</NavLink>

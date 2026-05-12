@@ -8,15 +8,16 @@ import Login from './pages/Login';
 import PuzzleList from './pages/PuzzleList';
 import PuzzlePlay from './pages/PuzzlePlay';
 import Leaderboard from './pages/Leaderboard';
+import Players from './pages/Players';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Chat from './pages/Chat';
 import Admin from './pages/Admin';
+import Games from './pages/Games';
 import TicTacToe from './pages/TicTacToe';
 import GameRoom from './pages/GameRoom';
 import Reaction from './pages/Reaction';
 import Memory from './pages/Memory';
-import Players from './pages/Players';
 import { useAuth } from './store';
 
 function Protected({ children, admin }) {
@@ -40,18 +41,28 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/puzzles" element={<Protected><PuzzleList /></Protected>} />
+
+          {/* Судоку — основная игра */}
+          <Route path="/sudoku" element={<Protected><PuzzleList /></Protected>} />
+          <Route path="/puzzles" element={<Navigate to="/sudoku" replace />} />
           <Route path="/puzzles/:id" element={<Protected><PuzzlePlay /></Protected>} />
+          <Route path="/sudoku/:id" element={<Protected><PuzzlePlay /></Protected>} />
+
+          {/* Мини-игры */}
+          <Route path="/games" element={<Protected><Games /></Protected>} />
+          <Route path="/tictactoe" element={<Protected><TicTacToe /></Protected>} />
+          <Route path="/game/:id" element={<Protected><GameRoom /></Protected>} />
+          <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
+          <Route path="/memory" element={<Protected><Memory /></Protected>} />
+
+          {/* Общее */}
           <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
           <Route path="/players" element={<Protected><Players /></Protected>} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/users/:id" element={<Protected><PublicProfile /></Protected>} />
           <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
-          <Route path="/tictactoe" element={<Protected><TicTacToe /></Protected>} />
-          <Route path="/game/:id" element={<Protected><GameRoom /></Protected>} />
-          <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
-          <Route path="/memory" element={<Protected><Memory /></Protected>} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
