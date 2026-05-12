@@ -11,7 +11,7 @@ export default function ChallengePopup() {
 
   useWs((msg) => {
     if (msg.type === 'challenge') {
-      sfx.tap();
+      sfx.challenge();
       setChallenge(msg);
     }
     if (msg.type === 'game_start' && challenge && msg.sessionId === challenge.sessionId) {
@@ -19,6 +19,7 @@ export default function ChallengePopup() {
       setChallenge(null);
     }
     if (msg.type === 'challenge_declined') {
+      sfx.decline();
       setDeclined(msg);
       setTimeout(() => setDeclined(null), 4000);
     }

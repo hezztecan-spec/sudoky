@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../store';
-import { getMuted, setMuted } from '../sfx';
+import { getVolume, setVolume } from '../sfx';
 import { useTheme } from '../useTheme';
 import { LineChart, BarChart } from '../components/Chart';
 
@@ -13,7 +13,7 @@ export default function Profile() {
   const [history, setHistory] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [byDiff, setByDiff] = useState([]);
-  const [muted, setMutedState] = useState(getMuted());
+  const [volume, setVolumeState] = useState(getVolume());
   const { dark, toggle: toggleTheme } = useTheme();
 
   const [editingName, setEditingName] = useState(false);
@@ -37,12 +37,6 @@ export default function Profile() {
     } catch (e) {
       setNameMsg(e.message);
     }
-  };
-
-  const toggleMute = () => {
-    const next = !muted;
-    setMuted(next);
-    setMutedState(next);
   };
 
   if (!user) return null;
@@ -113,15 +107,17 @@ export default function Profile() {
               <span className="font-bold">{user.streak}</span>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <span className="text-sm">🔊 Звуки и вибрация</span>
-            <button
-              type="button"
-              className={`shrink-0 w-12 h-7 rounded-full transition relative ${!muted ? 'bg-black dark:bg-white' : 'bg-paper-300 dark:bg-paper-700'}`}
-              onClick={toggleMute}
-            >
-              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white dark:bg-black shadow transition-all ${!muted ? 'left-[22px]' : 'left-0.5'}`} />
-            </button>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm shrink-0">🔊 Громкость</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(e) => { const v = parseInt(e.target.value, 10); setVolume(v); setVolumeState(v); }}
+              className="flex-1 h-2 rounded-full appearance-none bg-paper-300 dark:bg-paper-700 cursor-pointer accent-black"
+            />
+            <span className="text-xs text-paper-600 w-8 text-right">{volume}%</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm">🌙 Тёмная тема</span>
