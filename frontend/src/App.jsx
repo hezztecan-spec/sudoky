@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import InstallPrompt from './components/InstallPrompt';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import PuzzleList from './pages/PuzzleList';
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <div className="min-h-full">
       <Navbar />
+      <InstallPrompt />
       <main className="max-w-6xl mx-auto px-3 sm:px-4 pb-28 pt-6 safe-bottom">
         <Routes>
           <Route path="/" element={<Home />} />
