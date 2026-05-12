@@ -11,6 +11,8 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Chat from './pages/Chat';
 import Admin from './pages/Admin';
+import DuelCreate from './pages/DuelCreate';
+import DuelRoom from './pages/DuelRoom';
 import { useAuth } from './store';
 
 function Protected({ children, admin }) {
@@ -40,6 +42,8 @@ export default function App() {
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/users/:id" element={<Protected><PublicProfile /></Protected>} />
           <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
+          <Route path="/duel" element={<Protected><DuelCreate /></Protected>} />
+          <Route path="/duel/:id" element={<Protected><DuelRoom /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

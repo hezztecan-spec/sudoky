@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { authRequired } = require('../middleware/auth');
 const { getOnline } = require('../ws');
+const { levelInfo } = require('../utils/ranks');
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('/me', authRequired, async (req, res) => {
     [req.user.id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-  res.json(rows[0]);
+  res.json({ ...rows[0], level: levelInfo(rows[0].total_points) });
 });
 
 router.get('/users/:id', async (req, res) => {

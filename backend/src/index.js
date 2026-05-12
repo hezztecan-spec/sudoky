@@ -15,6 +15,8 @@ const achievementRoutes = require('./routes/achievements');
 const dailyTaskRoutes = require('./routes/dailyTasks');
 const chatRoutes = require('./routes/chat');
 const adminRoutes = require('./routes/admin');
+const statsRoutes = require('./routes/stats');
+const duelsRoutes = require('./routes/duels');
 
 const app = express();
 app.use(cors({
@@ -33,6 +35,8 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/daily-tasks', dailyTaskRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/duels', duelsRoutes);
 
 app.use((err, req, res, _next) => {
   console.error(err);

@@ -50,6 +50,18 @@ export const api = {
 
   adminCreatePuzzle: (body) => request('/admin/puzzles', { method: 'POST', body }),
   adminStats: () => request('/admin/stats'),
+
+  // stats
+  myTimeline: () => request('/stats/me/timeline'),
+  myByDifficulty: () => request('/stats/me/by-difficulty'),
+  compareOnPuzzle: (puzzleId) => request(`/stats/compare/${puzzleId}`),
+
+  // duels
+  createDuel: (difficulty) => request('/duels', { method: 'POST', body: { difficulty } }),
+  getDuel: (id) => request(`/duels/${id}`),
+  joinDuel: (id) => request(`/duels/${id}/join`, { method: 'POST' }),
+  finishDuel: (id, solution) => request(`/duels/${id}/finish`, { method: 'POST', body: { solution } }),
+  duelProgress: (id, filled) => request(`/duels/${id}/progress`, { method: 'POST', body: { filled } }),
 };
 
 export function wsUrlWithToken() {

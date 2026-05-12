@@ -30,6 +30,7 @@ export default function Navbar() {
 
         <nav className="ml-auto flex items-center gap-1 overflow-x-auto no-scrollbar">
           <NavLink to="/puzzles" className={linkClass}>Играть</NavLink>
+          <NavLink to="/duel" className={linkClass}>⚔️ Дуэль</NavLink>
           <NavLink to="/leaderboard" className={linkClass}>Топ</NavLink>
           <NavLink to="/chat" className={linkClass}>Чат</NavLink>
           {user && <NavLink to="/profile" className={linkClass}>Я</NavLink>}
