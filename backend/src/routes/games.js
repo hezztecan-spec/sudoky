@@ -183,11 +183,25 @@ function getInitialState(gameType, p1, p2) {
   if (gameType === 'tictactoe') {
     return { board: Array(9).fill(null), turnUserId: p1 };
   }
+  if (gameType === 'battleship') {
+    // Морской бой: оба игрока сначала расставляют корабли, потом стреляют
+    return {
+      phase: 'setup', // setup | battle | finished
+      turnUserId: p1,
+      p1Board: null,  // будет заполнено после расстановки
+      p2Board: null,
+      p1Shots: [],    // [{x,y,hit}]
+      p2Shots: [],
+      p1Ready: false,
+      p2Ready: false,
+    };
+  }
   return { turnUserId: p1 };
 }
 
 function processMove(session, userId, move) {
   if (session.game_type === 'tictactoe') return tttMove(session, userId, move);
+  if (session.game_type === 'battleship') return battleshipMove(session, userId, move);
   return { error: 'Игра не поддерживает ходы через этот эндпоинт' };
 }
 
@@ -226,6 +240,154 @@ function checkTTTWinner(board) {
     if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
   }
   return null;
+}
+
+// === МОРСКОЙ БОЙ ===
+// Корабли: 4,3,3,2,2,2,1,1,1,1 (всего 10 кораблей, 20 клеток)
+const SHIP_SIZES = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+
+function validateBoard(board) {
+  // board = массив 100 элементов: 0 = пусто, 1 = корабль
+  if (!Array.isArray(board) || board.length !== 100) return false;
+  if (board.some((c) => c !== 0 && c !== 1)) return false;
+
+  // Находим корабли (связные компоненты по горизонтали/вертикали)
+  const visited = new Set();
+  const ships = [];
+
+  for (let i = 0; i < 100; i++) {
+    if (board[i] !== 1 || visited.has(i)) continue;
+    const ship = [];
+    const queue = [i];
+    visited.add(i);
+    while (queue.length) {
+      const cur = queue.shift();
+      ship.push(cur);
+      const r = Math.floor(cur / 10);
+      const c = cur % 10;
+      const neighbors = [];
+      if (c < 9) neighbors.push(cur + 1);
+      if (c > 0) neighbors.push(cur - 1);
+      if (r < 9) neighbors.push(cur + 10);
+      if (r > 0) neighbors.push(cur - 10);
+      for (const n of neighbors) {
+        if (board[n] === 1 && !visited.has(n)) {
+          visited.add(n);
+          queue.push(n);
+        }
+      }
+    }
+    ships.push(ship);
+  }
+
+  // Проверяем что корабли прямые (все в одной строке или одном столбце)
+  for (const ship of ships) {
+    const rows = ship.map((i) => Math.floor(i / 10));
+    const cols = ship.map((i) => i % 10);
+    const sameRow = rows.every((r) => r === rows[0]);
+    const sameCol = cols.every((c) => c === cols[0]);
+    if (!sameRow && !sameCol) return false;
+  }
+
+  // Проверяем что корабли не касаются по диагонали
+  for (let i = 0; i < 100; i++) {
+    if (board[i] !== 1) continue;
+    const r = Math.floor(i / 10);
+    const c = i % 10;
+    const diags = [];
+    if (r > 0 && c > 0) diags.push(i - 11);
+    if (r > 0 && c < 9) diags.push(i - 9);
+    if (r < 9 && c > 0) diags.push(i + 9);
+    if (r < 9 && c < 9) diags.push(i + 11);
+    for (const d of diags) {
+      if (board[d] === 1) {
+        // Проверяем что это не часть того же корабля (соседи по горизонтали/вертикали)
+        const dr = Math.floor(d / 10);
+        const dc = d % 10;
+        const shareRow = (dr === r) && (Math.abs(dc - c) === 1);
+        const shareCol = (dc === c) && (Math.abs(dr - r) === 1);
+        if (!shareRow && !shareCol) return false;
+      }
+    }
+  }
+
+  // Проверяем размеры кораблей
+  const sizes = ships.map((s) => s.length).sort((a, b) => b - a);
+  const expected = [...SHIP_SIZES].sort((a, b) => b - a);
+  if (sizes.length !== expected.length) return false;
+  for (let i = 0; i < sizes.length; i++) {
+    if (sizes[i] !== expected[i]) return false;
+  }
+
+  return true;
+}
+
+function battleshipMove(session, userId, move) {
+  const state = typeof session.state === 'string' ? JSON.parse(session.state) : session.state;
+  const isP1 = userId === session.player1_id;
+  const isP2 = userId === session.player2_id;
+
+  // Фаза расстановки
+  if (state.phase === 'setup') {
+    if (!move || !move.action) return { error: 'Нужен move.action' };
+
+    if (move.action === 'place') {
+      const board = move.board;
+      if (!validateBoard(board)) return { error: 'Некорректная расстановка кораблей' };
+
+      if (isP1) { state.p1Board = board; state.p1Ready = true; }
+      else if (isP2) { state.p2Board = board; state.p2Ready = true; }
+      else return { error: 'Не участник' };
+
+      // Если оба готовы — переходим к бою
+      if (state.p1Ready && state.p2Ready) {
+        state.phase = 'battle';
+        state.turnUserId = session.player1_id;
+      }
+
+      return { state, nextTurn: state.turnUserId };
+    }
+
+    return { error: 'В фазе setup допустим только action=place' };
+  }
+
+  // Фаза боя
+  if (state.phase === 'battle') {
+    if (state.turnUserId !== userId) return { error: 'Не твой ход' };
+
+    const x = parseInt(move.x, 10);
+    const y = parseInt(move.y, 10);
+    if (!(x >= 0 && x < 10 && y >= 0 && y < 10)) return { error: 'Координаты 0-9' };
+
+    const idx = y * 10 + x;
+    const myShots = isP1 ? state.p1Shots : state.p2Shots;
+    const enemyBoard = isP1 ? state.p2Board : state.p1Board;
+
+    // Уже стреляли сюда?
+    if (myShots.some((s) => s.x === x && s.y === y)) return { error: 'Уже стреляли сюда' };
+
+    const hit = enemyBoard[idx] === 1;
+    myShots.push({ x, y, hit });
+
+    // Проверяем победу: все клетки кораблей противника поражены
+    const enemyShipCells = enemyBoard.reduce((acc, v, i) => v === 1 ? acc + 1 : acc, 0);
+    const hits = myShots.filter((s) => s.hit).length;
+
+    if (hits >= enemyShipCells) {
+      state.phase = 'finished';
+      state.turnUserId = null;
+      return { state, finished: true, winnerId: userId };
+    }
+
+    // Если попал — ещё ход, если мимо — ход переходит
+    if (!hit) {
+      state.turnUserId = isP1 ? session.player2_id : session.player1_id;
+    }
+
+    return { state, nextTurn: state.turnUserId };
+  }
+
+  return { error: 'Игра завершена' };
 }
 
 function getWinPoints(gameType) {

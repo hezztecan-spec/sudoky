@@ -5,7 +5,7 @@ const GAMES = [
   { id: 'reaction', name: 'Реакция', emoji: '⚡', desc: 'Проверь скорость', path: '/reaction' },
   { id: 'memory', name: 'Память', emoji: '🃏', desc: 'Найди пары карточек', path: '/memory' },
   { id: 'wordle', name: 'Слова', emoji: '📝', desc: 'Угадай слово за 6 попыток', path: '/wordle', soon: true },
-  { id: 'battleship', name: 'Морской бой', emoji: '🚢', desc: 'Потопи флот друга', path: '/battleship', soon: true },
+  { id: 'battleship', name: 'Морской бой', emoji: '🚢', desc: 'Потопи флот друга', path: '/battleship' },
 ];
 
 export default function Games() {

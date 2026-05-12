@@ -6,6 +6,7 @@ import { useWs } from '../useWs';
 const TABS = [
   { key: 'sudoku', label: '🧩 Судоку' },
   { key: 'tictactoe', label: '❌ Крестики' },
+  { key: 'battleship', label: '🚢 Морской бой' },
   { key: 'reaction', label: '⚡ Реакция' },
   { key: 'memory', label: '🃏 Память' },
 ];

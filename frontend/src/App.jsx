@@ -18,6 +18,7 @@ import TicTacToe from './pages/TicTacToe';
 import GameRoom from './pages/GameRoom';
 import Reaction from './pages/Reaction';
 import Memory from './pages/Memory';
+import Battleship from './pages/Battleship';
 import { useAuth } from './store';
 
 function Protected({ children, admin }) {
@@ -51,6 +52,7 @@ export default function App() {
           {/* Мини-игры */}
           <Route path="/games" element={<Protected><Games /></Protected>} />
           <Route path="/tictactoe" element={<Protected><TicTacToe /></Protected>} />
+          <Route path="/battleship" element={<Protected><Battleship /></Protected>} />
           <Route path="/game/:id" element={<Protected><GameRoom /></Protected>} />
           <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
           <Route path="/memory" element={<Protected><Memory /></Protected>} />

@@ -5,6 +5,7 @@ import { useAuth } from '../store';
 import { useWs } from '../useWs';
 import { sfx } from '../sfx';
 import Confetti from '../components/Confetti';
+import BattleshipBoard from './BattleshipBoard';
 
 export default function GameRoom() {
   const { id } = useParams();
@@ -44,6 +45,10 @@ export default function GameRoom() {
 
   if (session.game_type === 'tictactoe') {
     return <TTTBoard session={session} userId={user?.id} sessionId={id} nav={nav} />;
+  }
+
+  if (session.game_type === 'battleship') {
+    return <BattleshipBoard session={session} userId={user?.id} sessionId={id} onUpdate={load} />;
   }
 
   return <p className="text-center text-paper-500 pt-10">Игра {session.game_type} пока не реализована на фронте</p>;
