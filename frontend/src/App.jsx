@@ -16,6 +16,7 @@ import TicTacToe from './pages/TicTacToe';
 import GameRoom from './pages/GameRoom';
 import Reaction from './pages/Reaction';
 import Memory from './pages/Memory';
+import Players from './pages/Players';
 import { useAuth } from './store';
 
 function Protected({ children, admin }) {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/puzzles" element={<Protected><PuzzleList /></Protected>} />
           <Route path="/puzzles/:id" element={<Protected><PuzzlePlay /></Protected>} />
           <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
+          <Route path="/players" element={<Protected><Players /></Protected>} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/users/:id" element={<Protected><PublicProfile /></Protected>} />
