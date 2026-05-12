@@ -13,6 +13,11 @@ function ensureConnection() {
     globalWs.onmessage = (e) => {
       let data;
       try { data = JSON.parse(e.data); } catch { return; }
+      // Принудительное обновление от админа
+      if (data.type === 'force_reload') {
+        window.location.reload();
+        return;
+      }
       for (const fn of listeners) fn(data);
     };
     globalWs.onclose = () => {

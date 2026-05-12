@@ -146,6 +146,19 @@ export default function Admin() {
       )}
 
       {msg && <p className="text-center text-sm text-paper-700">{msg}</p>}
+
+      {/* Force reload */}
+      <section className="card p-4 flex items-center justify-between">
+        <div>
+          <p className="font-medium text-sm">🔄 Обновить сайт у всех</p>
+          <p className="text-xs text-paper-500">Все открытые вкладки перезагрузятся</p>
+        </div>
+        <button className="btn text-sm" onClick={async () => {
+          if (!confirm('Перезагрузить сайт у всех пользователей?')) return;
+          await api.adminForceReload();
+          setMsg('✓ Команда отправлена');
+        }}>Обновить</button>
+      </section>
     </div>
   );
 }

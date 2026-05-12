@@ -88,6 +88,7 @@ export const api = {
   adminUpdateUser: (id, body) => request(`/admin/users/${id}`, { method: 'PATCH', body }),
   adminDeleteUser: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
   adminResetPoints: (id) => request(`/admin/users/${id}/reset-points`, { method: 'POST' }),
+  adminForceReload: () => request('/admin/force-reload', { method: 'POST' }),
 };
 
 export function wsUrlWithToken() {

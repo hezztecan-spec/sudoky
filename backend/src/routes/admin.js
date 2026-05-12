@@ -106,4 +106,11 @@ router.post('/users/:id/reset-points', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Принудительное обновление у всех клиентов
+router.post('/force-reload', async (req, res) => {
+  const { broadcast } = require('../ws');
+  broadcast({ type: 'force_reload' });
+  res.json({ ok: true });
+});
+
 module.exports = router;

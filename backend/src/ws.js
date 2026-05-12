@@ -1,6 +1,7 @@
 const { WebSocketServer } = require('ws');
 const jwt = require('jsonwebtoken');
 const whatsapp = require('./whatsapp');
+const db = require('./db');
 
 let wssClients = null;
 let wssWorker = null;
@@ -43,6 +44,8 @@ function initWebSocket(server) {
           cur.username = user.username;
           online.set(user.id, cur);
           broadcastOnline();
+          // Обновляем last_seen
+          db.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [user.id]).catch(() => {});
         }
 
         ws.on('close', () => {
@@ -54,6 +57,8 @@ function initWebSocket(server) {
               if (cur.count <= 0) online.delete(user.id);
               broadcastOnline();
             }
+            // Обновляем last_seen при отключении
+            db.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [user.id]).catch(() => {});
           }
         });
         ws.on('error', () => clients.delete(ws));

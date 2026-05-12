@@ -3,6 +3,18 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useOnline } from '../useOnline';
 
+function formatLastSeen(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = Date.now();
+  const diff = Math.floor((now - d.getTime()) / 1000);
+  if (diff < 60) return 'только что';
+  if (diff < 3600) return `${Math.floor(diff / 60)} мин назад`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} дн назад`;
+  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+}
+
 export default function Players() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +67,11 @@ export default function Players() {
             {onlineIds.has(u.id) && (
               <span className="text-xs text-emerald-600 font-medium shrink-0">
                 {online.find((o) => o.id === u.id)?.status || 'онлайн'}
+              </span>
+            )}
+            {!onlineIds.has(u.id) && u.last_seen_at && (
+              <span className="text-xs text-paper-500 shrink-0">
+                {formatLastSeen(u.last_seen_at)}
               </span>
             )}
           </Link>
