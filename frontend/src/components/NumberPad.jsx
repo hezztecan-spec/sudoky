@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 // Сетка 3×3 + кнопки ⌫ и ✏️ (карандаш)
-export default function NumberPad({ onInput, activeDigit, value, pencilMode, onTogglePencil, onUndo, onHint }) {
+export default function NumberPad({ onInput, activeDigit, value, pencilMode, onTogglePencil, onUndo, onHint, undoDisabled, hintDisabled }) {
   const counts = useMemo(() => {
     const c = {};
     for (let i = 1; i <= 9; i++) c[i] = 0;
@@ -51,8 +51,9 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
         <button
           type="button"
           onClick={onUndo}
-          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg"
-          title="Отменить (Ctrl+Z)"
+          disabled={undoDisabled}
+          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Отменить (1 раз)"
         >
           ↩
         </button>
@@ -77,8 +78,9 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
         <button
           type="button"
           onClick={onHint}
-          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg"
-          title="Подсказка (-20% очков)"
+          disabled={hintDisabled}
+          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Подсказка (1 раз)"
         >
           💡
         </button>

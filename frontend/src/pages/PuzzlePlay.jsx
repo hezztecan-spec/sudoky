@@ -54,6 +54,7 @@ export default function PuzzlePlay() {
   // Percentile
   const [compare, setCompare] = useState(null);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [undoUsed, setUndoUsed] = useState(false);
 
   const initing = useRef(false);
 
@@ -135,7 +136,7 @@ export default function PuzzlePlay() {
   };
 
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || undoUsed) return;
     const prev = history[history.length - 1];
     setHistory((h) => h.slice(0, -1));
     setValue(prev.value);
@@ -143,6 +144,7 @@ export default function PuzzlePlay() {
     setLockedSet(prev.lockedSet);
     setNotes(prev.notes);
     setLives(prev.lives);
+    setUndoUsed(true);
     sfx.click();
   };
 
@@ -252,7 +254,7 @@ export default function PuzzlePlay() {
   };
 
   const handleHint = async () => {
-    if (result || gameOver || paused || !puzzle) return;
+    if (result || gameOver || paused || !puzzle || hintsUsed >= 1) return;
     try {
       const res = await api.hintCell(id, value, selected);
       pushHistory();
@@ -260,7 +262,7 @@ export default function PuzzlePlay() {
       setLockedSet((prev) => new Set(prev).add(res.index));
       setWrongSet((prev) => { const n = new Set(prev); n.delete(res.index); return n; });
       autoEraseNotes(res.index, parseInt(res.value, 10));
-      setHintsUsed((h) => h + 1);
+      setHintsUsed(1);
       sfx.correct();
     } catch (e) {
       setError(e.message);
@@ -305,6 +307,7 @@ export default function PuzzlePlay() {
       setPausedSeconds(0);
       setHistory([]);
       setHintsUsed(0);
+      setUndoUsed(false);
       clearProgress(id);
     } catch (e) {
       setError(e.message);
@@ -418,6 +421,8 @@ export default function PuzzlePlay() {
             onTogglePencil={() => setPencilMode(!pencilMode)}
             onUndo={undo}
             onHint={handleHint}
+            undoDisabled={undoUsed || history.length === 0}
+            hintDisabled={hintsUsed >= 1}
           />
           <div className="flex gap-2 justify-center pt-1 flex-wrap">
             <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>↻ Заново</button>
