@@ -50,11 +50,12 @@ body {
   max-width: 540px;
   margin-inline: auto;
   background: #000;
-  border: 2px solid #000;
-  border-radius: 16px;
+  border: 2.5px solid #000;
+  border-radius: 18px;
   overflow: hidden;
   touch-action: manipulation;
   user-select: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .sudoku-cell {
@@ -74,14 +75,14 @@ body {
 }
 .sudoku-cell:active { transform: scale(0.97); }
 .sudoku-cell.fixed  { color: #525252; background: #f4f4f4; cursor: default; }
-.sudoku-cell.selected { background: #000; color: #fff; }
+.sudoku-cell.selected { background: #1a1a1a; color: #fff; }
 .sudoku-cell.same-row,
 .sudoku-cell.same-col,
-.sudoku-cell.same-box { background: #f4f4f4; }
+.sudoku-cell.same-box { background: #f0f0f0; }
 .sudoku-cell.same-row.fixed,
 .sudoku-cell.same-col.fixed,
-.sudoku-cell.same-box.fixed { background: #ebebeb; }
-.sudoku-cell.same-value { background: #fde68a; }  /* подсветка одинаковых цифр */
+.sudoku-cell.same-box.fixed { background: #eaeaea; }
+.sudoku-cell.same-value { background: #fef3c7; }  /* подсветка одинаковых цифр */
 .sudoku-cell.wrong {
   background: #fee2e2 !important;
   color: #dc2626 !important;

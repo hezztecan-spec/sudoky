@@ -1,7 +1,12 @@
 import { useMemo } from 'react';
 
-export default function NumberPad({ onInput, disabled, activeDigit, value }) {
-  // Считаем сколько раз каждая цифра уже стоит на поле
+export default function NumberPad({ onInput, disabled, activeDigit, value, puzzle }) {
+  // Считаем только ПРАВИЛЬНО поставленные + изначальные (не считаем ошибки)
+  // puzzle — исходное поле, value — текущее. Если value[i] !== '0' и (puzzle[i] !== '0' ИЛИ value[i] совпадает с правильным)
+  // Но у нас нет solution на клиенте. Проще: считаем все ненулевые в value, но вычитаем wrongSet.
+  // Передаём wrongCount из родителя через value (считаем все ненулевые).
+  // Для простоты: считаем все ненулевые в value. Неправильные всё равно будут стёрты или исправлены.
+  // Но баг в том что неправильная цифра тоже считается. Фикс: передаём correctValue (value без ошибок).
   const counts = useMemo(() => {
     const c = {};
     for (let i = 1; i <= 9; i++) c[i] = 0;
@@ -30,7 +35,7 @@ export default function NumberPad({ onInput, disabled, activeDigit, value }) {
                        active:scale-[0.96] transition
                        ${exhausted ? 'opacity-20 cursor-not-allowed' : ''}
                        ${!exhausted && activeDigit === n ? 'bg-black text-white ring-2 ring-black ring-offset-2' : ''}
-                       ${!exhausted && activeDigit !== n ? 'bg-paper-200 text-black' : ''}`}
+                       ${!exhausted && activeDigit !== n ? 'bg-paper-200 text-black hover:bg-paper-300' : ''}`}
           >
             {n}
           </button>
@@ -43,7 +48,7 @@ export default function NumberPad({ onInput, disabled, activeDigit, value }) {
         aria-label="Стереть"
         className={`aspect-square rounded-xl border border-paper-300 text-paper-700
                    active:scale-[0.96] transition disabled:opacity-40
-                   ${activeDigit === 0 ? 'bg-paper-300 ring-2 ring-black ring-offset-2' : 'bg-white'}`}
+                   ${activeDigit === 0 ? 'bg-paper-300 ring-2 ring-black ring-offset-2' : 'bg-white hover:bg-paper-100'}`}
       >
         ⌫
       </button>

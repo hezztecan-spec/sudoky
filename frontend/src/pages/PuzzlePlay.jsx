@@ -176,6 +176,9 @@ export default function PuzzlePlay() {
     }
   };
 
+  // correctValue — value без ошибок (для подсчёта оставшихся цифр)
+  const correctValue = value.split('').map((ch, i) => wrongSet.has(i) ? '0' : ch).join('');
+
   if (loading) return <p className="text-center text-paper-500 pt-10">Загрузка…</p>;
   if (error && !puzzle) return <p className="text-center text-red-600 pt-10">{error}</p>;
 
@@ -238,7 +241,7 @@ export default function PuzzlePlay() {
             onInput={handleNumPad}
             disabled={false}
             activeDigit={activeDigit}
-            value={value}
+            value={correctValue}
           />
           <div className="flex gap-2 justify-center pt-1 flex-wrap">
             <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>
