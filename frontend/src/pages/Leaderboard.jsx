@@ -9,6 +9,7 @@ const TABS = [
   { key: 'battleship', label: '🚢 Морской бой' },
   { key: 'reaction', label: '⚡ Реакция' },
   { key: 'memory', label: '🃏 Память' },
+  { key: 'wordle', label: '📝 Слова' },
 ];
 
 export default function Leaderboard() {

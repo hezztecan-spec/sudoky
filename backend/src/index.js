@@ -21,6 +21,7 @@ const gamesRoutes = require('./routes/games');
 const wordleRoutes = require('./routes/wordle');
 const friendsRoutes = require('./routes/friends');
 const feedRoutes = require('./routes/feed');
+const minigamesRoutes = require('./routes/minigames');
 
 const app = express();
 app.use(cors({
@@ -45,6 +46,7 @@ app.use('/api/games', gamesRoutes);
 app.use('/api/wordle', wordleRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/minigames', minigamesRoutes);
 
 app.use((err, req, res, _next) => {
   console.error(err);

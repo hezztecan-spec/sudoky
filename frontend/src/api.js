@@ -77,6 +77,11 @@ export const api = {
   // feed
   feed: () => request('/feed'),
 
+  // minigames results
+  submitReaction: (avgMs) => request('/minigames/reaction/submit', { method: 'POST', body: { avgMs } }),
+  submitMemory: (moves, seconds, pairs) => request('/minigames/memory/submit', { method: 'POST', body: { moves, seconds, pairs } }),
+  submitWordle: (attempts, won) => request('/minigames/wordle/submit', { method: 'POST', body: { attempts, won } }),
+
   // admin users
   adminUsers: () => request('/admin/users'),
   adminGetUser: (id) => request(`/admin/users/${id}`),

@@ -36,9 +36,11 @@ export default function Wordle() {
         setWon(true);
         setWord(res.word);
         sfx.win();
+        api.submitWordle(guesses.length + 1, true).catch(() => {});
       } else if (guesses.length + 1 >= MAX_GUESSES) {
         setLost(true);
         sfx.wrong();
+        api.submitWordle(MAX_GUESSES, false).catch(() => {});
       } else {
         sfx.tap();
       }

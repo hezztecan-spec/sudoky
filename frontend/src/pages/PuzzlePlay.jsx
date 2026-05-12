@@ -248,7 +248,8 @@ export default function PuzzlePlay() {
   );
 
   const placeDigit = async (idx, num) => {
-    setValue((prev) => prev.slice(0, idx) + String(num) + prev.slice(idx + 1));
+    const newValue = value.slice(0, idx) + String(num) + value.slice(idx + 1);
+    setValue(newValue);
     sfx.tap();
 
     try {
@@ -258,6 +259,13 @@ export default function PuzzlePlay() {
         setLockedSet((prev) => new Set(prev).add(idx));
         setWrongSet((prev) => { const n = new Set(prev); n.delete(idx); return n; });
         autoEraseNotes(idx, num);
+
+        // Авто-submit: если все клетки заполнены и нет ошибок
+        const allFilled = !newValue.includes('0');
+        if (allFilled) {
+          // Небольшая задержка чтобы анимация правильной клетки отыграла
+          setTimeout(() => autoSubmit(newValue), 300);
+        }
       } else {
         sfx.wrong();
         setWrongSet((prev) => new Set(prev).add(idx));
@@ -269,6 +277,24 @@ export default function PuzzlePlay() {
       }
     } catch (e) {
       console.warn('check failed', e.message);
+    }
+  };
+
+  const autoSubmit = async (solution) => {
+    if (submitting || result) return;
+    setSubmitting(true);
+    try {
+      const res = await api.submitPuzzle(id, solution, hintMode);
+      setResult(res);
+      if (res.ok) {
+        sfx.win();
+        clearProgress(id);
+        api.compareOnPuzzle(id).then(setCompare).catch(() => {});
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -452,9 +478,6 @@ export default function PuzzlePlay() {
           <div className="flex gap-2 justify-center pt-1 flex-wrap">
             <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>↻ Заново</button>
             <button className="btn-danger px-4 py-2 text-sm" onClick={() => setGameOver(true)}>Завершить</button>
-            <button className="btn px-6 py-2.5" onClick={submit} disabled={submitting}>
-              {submitting ? '…' : 'Готово'}
-            </button>
           </div>
         </>
       )}

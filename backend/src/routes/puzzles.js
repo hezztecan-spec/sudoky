@@ -36,8 +36,9 @@ router.get('/', optionalAuth, async (req, res) => {
     [from.toISOString(), to.toISOString()]
   );
 
-  // Если пользователь залогинен — пометим пройденные
+  // Если пользователь залогинен — пометим пройденные и незавершённые
   let solvedIds = new Set();
+  let inProgressIds = new Set();
   if (req.user) {
     const ids = rows.map((r) => r.id);
     if (ids.length > 0) {
@@ -46,10 +47,16 @@ router.get('/', optionalAuth, async (req, res) => {
         [req.user.id, ids]
       );
       solvedIds = new Set(solved.rows.map((r) => r.puzzle_id));
+
+      const inProgress = await db.query(
+        `SELECT puzzle_id FROM attempts WHERE user_id=$1 AND puzzle_id = ANY($2) AND is_solved=FALSE`,
+        [req.user.id, ids]
+      );
+      inProgressIds = new Set(inProgress.rows.map((r) => r.puzzle_id));
     }
   }
 
-  res.json(rows.map((r) => ({ ...r, solved: solvedIds.has(r.id) })));
+  res.json(rows.map((r) => ({ ...r, solved: solvedIds.has(r.id), in_progress: inProgressIds.has(r.id) })));
 });
 
 router.get('/:id', optionalAuth, async (req, res) => {
