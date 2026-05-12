@@ -1,12 +1,7 @@
 import { useMemo } from 'react';
 
-export default function NumberPad({ onInput, disabled, activeDigit, value, puzzle }) {
-  // Считаем только ПРАВИЛЬНО поставленные + изначальные (не считаем ошибки)
-  // puzzle — исходное поле, value — текущее. Если value[i] !== '0' и (puzzle[i] !== '0' ИЛИ value[i] совпадает с правильным)
-  // Но у нас нет solution на клиенте. Проще: считаем все ненулевые в value, но вычитаем wrongSet.
-  // Передаём wrongCount из родителя через value (считаем все ненулевые).
-  // Для простоты: считаем все ненулевые в value. Неправильные всё равно будут стёрты или исправлены.
-  // Но баг в том что неправильная цифра тоже считается. Фикс: передаём correctValue (value без ошибок).
+// Сетка 3×3 + кнопки ⌫ и ✏️ (карандаш)
+export default function NumberPad({ onInput, activeDigit, value, pencilMode, onTogglePencil, onUndo, onHint }) {
   const counts = useMemo(() => {
     const c = {};
     for (let i = 1; i <= 9; i++) c[i] = 0;
@@ -22,36 +17,72 @@ export default function NumberPad({ onInput, disabled, activeDigit, value, puzzl
   const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   return (
-    <div className="w-full max-w-[540px] mx-auto grid grid-cols-10 gap-1.5 sm:gap-2">
-      {nums.map((n) => {
-        const exhausted = counts[n] >= 9;
-        return (
-          <button
-            key={n}
-            type="button"
-            disabled={disabled || exhausted}
-            onClick={() => onInput(n)}
-            className={`aspect-square rounded-xl font-bold text-xl sm:text-2xl
-                       active:scale-[0.96] transition
-                       ${exhausted ? 'opacity-20 cursor-not-allowed' : ''}
-                       ${!exhausted && activeDigit === n ? 'bg-black text-white ring-2 ring-black ring-offset-2' : ''}
-                       ${!exhausted && activeDigit !== n ? 'bg-paper-200 text-black hover:bg-paper-300' : ''}`}
-          >
-            {n}
-          </button>
-        );
-      })}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => onInput(0)}
-        aria-label="Стереть"
-        className={`aspect-square rounded-xl border border-paper-300 text-paper-700
-                   active:scale-[0.96] transition disabled:opacity-40
-                   ${activeDigit === 0 ? 'bg-paper-300 ring-2 ring-black ring-offset-2' : 'bg-white hover:bg-paper-100'}`}
-      >
-        ⌫
-      </button>
+    <div className="w-full max-w-[320px] mx-auto space-y-2">
+      {/* 3×3 цифры */}
+      <div className="grid grid-cols-3 gap-2">
+        {nums.map((n) => {
+          const remaining = 9 - counts[n];
+          const exhausted = remaining <= 0;
+          return (
+            <button
+              key={n}
+              type="button"
+              disabled={exhausted}
+              onClick={() => onInput(n)}
+              className={`relative aspect-[4/3] rounded-xl font-bold text-2xl
+                         active:scale-[0.96] transition
+                         ${exhausted ? 'opacity-15 cursor-not-allowed bg-paper-100' : ''}
+                         ${!exhausted && activeDigit === n ? 'bg-black text-white ring-2 ring-black ring-offset-2' : ''}
+                         ${!exhausted && activeDigit !== n ? 'bg-paper-200 text-black hover:bg-paper-300' : ''}`}
+            >
+              {n}
+              {!exhausted && (
+                <span className="absolute top-1 right-2 text-[10px] font-normal text-paper-500">
+                  {remaining}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Нижняя панель: undo, стереть, карандаш, подсказка */}
+      <div className="grid grid-cols-4 gap-2">
+        <button
+          type="button"
+          onClick={onUndo}
+          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg"
+          title="Отменить (Ctrl+Z)"
+        >
+          ↩
+        </button>
+        <button
+          type="button"
+          onClick={() => onInput(0)}
+          className={`aspect-[4/3] rounded-xl border border-paper-300 text-paper-700 hover:bg-paper-100 active:scale-95 transition flex items-center justify-center text-lg
+                     ${activeDigit === 0 ? 'bg-paper-300 ring-2 ring-black ring-offset-1' : 'bg-white'}`}
+          title="Стереть"
+        >
+          ⌫
+        </button>
+        <button
+          type="button"
+          onClick={onTogglePencil}
+          className={`aspect-[4/3] rounded-xl active:scale-95 transition flex items-center justify-center text-lg
+                     ${pencilMode ? 'bg-black text-white' : 'bg-paper-200 text-paper-700 hover:bg-paper-300'}`}
+          title="Карандаш (заметки)"
+        >
+          ✏️
+        </button>
+        <button
+          type="button"
+          onClick={onHint}
+          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg"
+          title="Подсказка (-20% очков)"
+        >
+          💡
+        </button>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { sfx } from '../sfx';
 
 export default function ChallengePopup() {
   const [challenge, setChallenge] = useState(null);
+  const [declined, setDeclined] = useState(null); // {by: {username}}
   const nav = useNavigate();
 
   useWs((msg) => {
@@ -16,6 +17,10 @@ export default function ChallengePopup() {
     if (msg.type === 'game_start' && challenge && msg.sessionId === challenge.sessionId) {
       nav(`/game/${challenge.sessionId}`);
       setChallenge(null);
+    }
+    if (msg.type === 'challenge_declined') {
+      setDeclined(msg);
+      setTimeout(() => setDeclined(null), 4000);
     }
   });
 
@@ -34,30 +39,44 @@ export default function ChallengePopup() {
     setChallenge(null);
   };
 
-  // Автоматически скрываем через 30 сек
   useEffect(() => {
     if (!challenge) return;
     const t = setTimeout(() => setChallenge(null), 30000);
     return () => clearTimeout(t);
   }, [challenge]);
 
-  if (!challenge) return null;
-
   const gameNames = { tictactoe: 'Крестики-нолики', battleship: 'Морской бой', reaction: 'Реакция', memory: 'Память' };
 
   return (
-    <div className="fixed top-4 left-4 right-4 z-50 max-w-sm mx-auto card p-4 shadow-lg animate-pop border-2 border-black">
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">⚔️</span>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold">{challenge.from.username}</p>
-          <p className="text-sm text-paper-600">вызывает тебя в {gameNames[challenge.gameType] || challenge.gameType}</p>
+    <>
+      {/* Входящий вызов */}
+      {challenge && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-sm mx-auto card p-4 shadow-lg animate-pop border-2 border-black dark:border-white">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">⚔️</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold">{challenge.from.username}</p>
+              <p className="text-sm text-paper-600">вызывает тебя в {gameNames[challenge.gameType] || challenge.gameType}</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button className="btn-ghost flex-1" onClick={decline}>Отклонить</button>
+            <button className="btn flex-1" onClick={accept}>Принять</button>
+          </div>
         </div>
-      </div>
-      <div className="flex gap-2 mt-3">
-        <button className="btn-ghost flex-1" onClick={decline}>Отклонить</button>
-        <button className="btn flex-1" onClick={accept}>Принять</button>
-      </div>
-    </div>
+      )}
+
+      {/* Уведомление об отказе */}
+      {declined && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-sm mx-auto card p-4 shadow-lg animate-pop border border-red-300">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">😔</span>
+            <p className="text-sm">
+              <span className="font-bold">{declined.by?.username || 'Соперник'}</span> отклонил вызов
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

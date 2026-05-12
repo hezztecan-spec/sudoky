@@ -38,6 +38,7 @@ export const api = {
   startPuzzle: (id) => request(`/puzzles/${id}/start`, { method: 'POST' }),
   resetPuzzle: (id) => request(`/puzzles/${id}/reset`, { method: 'POST' }),
   checkCell: (id, index, value) => request(`/puzzles/${id}/check`, { method: 'POST', body: { index, value } }),
+  hintCell: (id, value, index) => request(`/puzzles/${id}/hint`, { method: 'POST', body: { value, index } }),
   submitPuzzle: (id, solution, hint) => request(`/puzzles/${id}/submit`, { method: 'POST', body: { solution, hint } }),
 
   onlineUsers: () => request('/online', { auth: false }),
@@ -63,6 +64,15 @@ export const api = {
   getSession: (id) => request(`/games/session/${id}`),
   makeMove: (id, move) => request(`/games/session/${id}/move`, { method: 'POST', body: { move } }),
   gameLeaderboard: (gameType) => request(`/games/leaderboard/${gameType}`, { auth: false }),
+
+  // wordle
+  wordleInfo: () => request('/wordle/info'),
+  wordleGuess: (guess) => request('/wordle/guess', { method: 'POST', body: { guess } }),
+
+  // friends
+  friends: () => request('/friends'),
+  addFriend: (username) => request('/friends/add', { method: 'POST', body: { username } }),
+  removeFriend: (friendId) => request('/friends/remove', { method: 'POST', body: { friendId } }),
 };
 
 export function wsUrlWithToken() {

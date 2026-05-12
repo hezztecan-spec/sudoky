@@ -18,6 +18,8 @@ const adminRoutes = require('./routes/admin');
 const statsRoutes = require('./routes/stats');
 const duelsRoutes = require('./routes/duels');
 const gamesRoutes = require('./routes/games');
+const wordleRoutes = require('./routes/wordle');
+const friendsRoutes = require('./routes/friends');
 
 const app = express();
 app.use(cors({
@@ -39,6 +41,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/duels', duelsRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/wordle', wordleRoutes);
+app.use('/api/friends', friendsRoutes);
 
 app.use((err, req, res, _next) => {
   console.error(err);

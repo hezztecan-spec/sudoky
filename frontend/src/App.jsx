@@ -18,8 +18,10 @@ import TicTacToe from './pages/TicTacToe';
 import GameRoom from './pages/GameRoom';
 import Reaction from './pages/Reaction';
 import Memory from './pages/Memory';
+import Wordle from './pages/Wordle';
 import Battleship from './pages/Battleship';
 import { useAuth } from './store';
+import { useTheme } from './useTheme';
 
 function Protected({ children, admin }) {
   const { user, loading } = useAuth();
@@ -31,7 +33,8 @@ function Protected({ children, admin }) {
 
 export default function App() {
   const bootstrap = useAuth((s) => s.bootstrap);
-  useEffect(() => { bootstrap(); }, [bootstrap]);
+  const initTheme = useTheme((s) => s.init);
+  useEffect(() => { bootstrap(); initTheme(); }, [bootstrap, initTheme]);
 
   return (
     <div className="min-h-full">
@@ -56,6 +59,7 @@ export default function App() {
           <Route path="/game/:id" element={<Protected><GameRoom /></Protected>} />
           <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
           <Route path="/memory" element={<Protected><Memory /></Protected>} />
+          <Route path="/wordle" element={<Protected><Wordle /></Protected>} />
 
           {/* Общее */}
           <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />

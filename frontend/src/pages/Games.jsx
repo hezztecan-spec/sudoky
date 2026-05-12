@@ -4,7 +4,7 @@ const GAMES = [
   { id: 'tictactoe', name: 'Крестики-нолики', emoji: '❌', desc: 'Классика с другом', path: '/tictactoe' },
   { id: 'reaction', name: 'Реакция', emoji: '⚡', desc: 'Проверь скорость', path: '/reaction' },
   { id: 'memory', name: 'Память', emoji: '🃏', desc: 'Найди пары карточек', path: '/memory' },
-  { id: 'wordle', name: 'Слова', emoji: '📝', desc: 'Угадай слово за 6 попыток', path: '/wordle', soon: true },
+  { id: 'wordle', name: 'Слова', emoji: '📝', desc: 'Угадай слово за 6 попыток', path: '/wordle' },
   { id: 'battleship', name: 'Морской бой', emoji: '🚢', desc: 'Потопи флот друга', path: '/battleship' },
 ];
 

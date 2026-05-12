@@ -11,13 +11,36 @@ router.get('/online', (req, res) => {
 });
 
 router.get('/me', authRequired, async (req, res) => {
-  const { rows } = await db.query(
-    `SELECT id, phone, username, is_admin, total_points, total_solved, best_time, rank, avatar_color, picture, created_at
-     FROM users WHERE id=$1`,
-    [req.user.id]
+  // Обновляем streak
+  const today = new Date().toISOString().slice(0, 10);
+  const { rows: userRows } = await db.query(
+    `SELECT * FROM users WHERE id=$1`, [req.user.id]
   );
-  if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-  res.json({ ...rows[0], level: levelInfo(rows[0].total_points) });
+  if (!userRows[0]) return res.status(404).json({ error: 'Not found' });
+  const u = userRows[0];
+
+  let streak = u.streak || 0;
+  const lastActive = u.last_active_date ? u.last_active_date.toISOString().slice(0, 10) : null;
+
+  if (lastActive !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (lastActive === yesterday) {
+      streak += 1;
+    } else if (lastActive !== today) {
+      streak = 1;
+    }
+    await db.query(
+      `UPDATE users SET streak=$1, last_active_date=$2 WHERE id=$3`,
+      [streak, today, req.user.id]
+    );
+  }
+
+  res.json({
+    id: u.id, phone: u.phone, username: u.username, is_admin: u.is_admin,
+    total_points: u.total_points, total_solved: u.total_solved, best_time: u.best_time,
+    rank: u.rank, avatar_color: u.avatar_color, picture: u.picture, created_at: u.created_at,
+    streak, level: levelInfo(u.total_points),
+  });
 });
 
 router.get('/users/:id', async (req, res) => {

@@ -8,6 +8,17 @@ import Confetti from '../components/Confetti';
 import { sfx } from '../sfx';
 
 const MAX_LIVES = 3;
+const STORAGE_PREFIX = 'sudoku_progress_';
+
+function saveProgress(id, data) {
+  try { localStorage.setItem(STORAGE_PREFIX + id, JSON.stringify(data)); } catch {}
+}
+function loadProgress(id) {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + id)); } catch { return null; }
+}
+function clearProgress(id) {
+  try { localStorage.removeItem(STORAGE_PREFIX + id); } catch {}
+}
 
 export default function PuzzlePlay() {
   const { id } = useParams();
@@ -26,26 +37,67 @@ export default function PuzzlePlay() {
   const [wrongSet, setWrongSet] = useState(() => new Set());
   const [lockedSet, setLockedSet] = useState(() => new Set());
   const [gameOver, setGameOver] = useState(false);
-
   const [hintMode, setHintMode] = useState(false);
 
-  // Pause
+  // Карандаш
+  const [pencilMode, setPencilMode] = useState(false);
+  const [notes, setNotes] = useState(() => new Map()); // Map<idx, Set<number>>
+
+  // Undo
+  const [history, setHistory] = useState([]); // [{value, notes, wrongSet, lockedSet, lives}]
+
+  // Пауза
   const [paused, setPaused] = useState(false);
   const [pausedSeconds, setPausedSeconds] = useState(0);
   const pauseStart = useRef(null);
 
   // Percentile
   const [compare, setCompare] = useState(null);
+  const [hintsUsed, setHintsUsed] = useState(0);
 
   const initing = useRef(false);
+
+  // Сохранение прогресса при каждом изменении
+  useEffect(() => {
+    if (!puzzle || result || loading) return;
+    saveProgress(id, {
+      value,
+      lives,
+      wrongSet: [...wrongSet],
+      lockedSet: [...lockedSet],
+      notes: [...notes.entries()].map(([k, v]) => [k, [...v]]),
+      hintMode,
+      hintsUsed,
+      pausedSeconds,
+    });
+  }, [value, lives, wrongSet, lockedSet, notes, hintMode, hintsUsed, pausedSeconds, puzzle, result, loading, id]);
 
   const loadPuzzle = useCallback(async () => {
     try {
       const p = await api.getPuzzle(id);
       setPuzzle(p);
-      setValue(p.puzzle);
+
+      // Попробуем восстановить прогресс
+      const saved = loadProgress(id);
+      if (saved && saved.value && saved.value.length === 81) {
+        setValue(saved.value);
+        setLives(saved.lives ?? MAX_LIVES);
+        setWrongSet(new Set(saved.wrongSet || []));
+        setLockedSet(new Set(saved.lockedSet || []));
+        setNotes(new Map((saved.notes || []).map(([k, v]) => [k, new Set(v)])));
+        setHintMode(saved.hintMode || false);
+        setHintsUsed(saved.hintsUsed || 0);
+        setPausedSeconds(saved.pausedSeconds || 0);
+      } else {
+        setValue(p.puzzle);
+      }
+
       const start = await api.startPuzzle(id);
-      setStartedAt(start.started_at);
+      if (start.error && start.solved) {
+        setResult({ ok: true, alreadySolved: true });
+      } else {
+        setStartedAt(start.started_at);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -62,7 +114,6 @@ export default function PuzzlePlay() {
   const togglePause = () => {
     if (result || gameOver) return;
     if (paused) {
-      // resume — добавляем время паузы к pausedSeconds
       const delta = Math.floor((Date.now() - pauseStart.current) / 1000);
       setPausedSeconds((p) => p + delta);
       setPaused(false);
@@ -72,26 +123,101 @@ export default function PuzzlePlay() {
     }
   };
 
+  // Сохранить состояние в историю (для undo)
+  const pushHistory = () => {
+    setHistory((h) => [...h.slice(-50), {
+      value,
+      wrongSet: new Set(wrongSet),
+      lockedSet: new Set(lockedSet),
+      notes: new Map([...notes.entries()].map(([k, v]) => [k, new Set(v)])),
+      lives,
+    }]);
+  };
+
+  const undo = () => {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setValue(prev.value);
+    setWrongSet(prev.wrongSet);
+    setLockedSet(prev.lockedSet);
+    setNotes(prev.notes);
+    setLives(prev.lives);
+    sfx.click();
+  };
+
+  // Автостирание заметок: когда ставим цифру, убираем её из заметок в строке/столбце/квадрате
+  const autoEraseNotes = (idx, num) => {
+    const row = Math.floor(idx / 9);
+    const col = idx % 9;
+    const boxR = Math.floor(row / 3) * 3;
+    const boxC = Math.floor(col / 3) * 3;
+
+    setNotes((prev) => {
+      const next = new Map(prev);
+      for (let i = 0; i < 9; i++) {
+        // строка
+        const rIdx = row * 9 + i;
+        if (next.has(rIdx)) { const s = new Set(next.get(rIdx)); s.delete(num); next.set(rIdx, s); }
+        // столбец
+        const cIdx = i * 9 + col;
+        if (next.has(cIdx)) { const s = new Set(next.get(cIdx)); s.delete(num); next.set(cIdx, s); }
+      }
+      // квадрат
+      for (let r = boxR; r < boxR + 3; r++) {
+        for (let c = boxC; c < boxC + 3; c++) {
+          const bIdx = r * 9 + c;
+          if (next.has(bIdx)) { const s = new Set(next.get(bIdx)); s.delete(num); next.set(bIdx, s); }
+        }
+      }
+      // Убираем заметки из самой клетки
+      next.delete(idx);
+      return next;
+    });
+  };
+
   const handleCellClick = useCallback(
     async (idx) => {
       if (!puzzle || result || gameOver || paused) return;
       setSelected(idx);
 
-      if (activeDigit !== null && activeDigit !== 0 && puzzle.puzzle[idx] === '0' && !lockedSet.has(idx)) {
-        await placeDigit(idx, activeDigit);
-      }
+      if (activeDigit === null) return;
+
+      // Стирание
       if (activeDigit === 0 && puzzle.puzzle[idx] === '0' && !lockedSet.has(idx)) {
+        pushHistory();
         setValue((prev) => prev.slice(0, idx) + '0' + prev.slice(idx + 1));
-        setWrongSet((prev) => {
-          if (!prev.has(idx)) return prev;
-          const next = new Set(prev);
-          next.delete(idx);
-          return next;
-        });
+        setWrongSet((prev) => { const n = new Set(prev); n.delete(idx); return n; });
+        setNotes((prev) => { const n = new Map(prev); n.delete(idx); return n; });
+        setActiveDigit(null);
+        return;
+      }
+
+      if (activeDigit >= 1 && activeDigit <= 9 && puzzle.puzzle[idx] === '0' && !lockedSet.has(idx)) {
+        // Карандаш
+        if (pencilMode) {
+          pushHistory();
+          setNotes((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(idx) || new Set();
+            const updated = new Set(existing);
+            if (updated.has(activeDigit)) updated.delete(activeDigit);
+            else updated.add(activeDigit);
+            next.set(idx, updated);
+            return next;
+          });
+          sfx.tap();
+          setActiveDigit(null);
+          return;
+        }
+
+        // Обычная постановка
+        pushHistory();
+        await placeDigit(idx, activeDigit);
         setActiveDigit(null);
       }
     },
-    [puzzle, result, gameOver, paused, activeDigit, lockedSet]
+    [puzzle, result, gameOver, paused, activeDigit, lockedSet, pencilMode, value, wrongSet, notes, lives]
   );
 
   const placeDigit = async (idx, num) => {
@@ -103,12 +229,8 @@ export default function PuzzlePlay() {
       if (correct) {
         sfx.correct();
         setLockedSet((prev) => new Set(prev).add(idx));
-        setWrongSet((prev) => {
-          if (!prev.has(idx)) return prev;
-          const next = new Set(prev);
-          next.delete(idx);
-          return next;
-        });
+        setWrongSet((prev) => { const n = new Set(prev); n.delete(idx); return n; });
+        autoEraseNotes(idx, num);
       } else {
         sfx.wrong();
         setWrongSet((prev) => new Set(prev).add(idx));
@@ -121,8 +243,6 @@ export default function PuzzlePlay() {
     } catch (e) {
       console.warn('check failed', e.message);
     }
-
-    setActiveDigit(null);
   };
 
   const handleNumPad = (num) => {
@@ -131,9 +251,30 @@ export default function PuzzlePlay() {
     sfx.click();
   };
 
+  const handleHint = async () => {
+    if (result || gameOver || paused || !puzzle) return;
+    try {
+      const res = await api.hintCell(id, value, selected);
+      pushHistory();
+      setValue((prev) => prev.slice(0, res.index) + res.value + prev.slice(res.index + 1));
+      setLockedSet((prev) => new Set(prev).add(res.index));
+      setWrongSet((prev) => { const n = new Set(prev); n.delete(res.index); return n; });
+      autoEraseNotes(res.index, parseInt(res.value, 10));
+      setHintsUsed((h) => h + 1);
+      sfx.correct();
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  // Keyboard
   useEffect(() => {
     if (result || gameOver || paused) return;
     const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { undo(); e.preventDefault(); return; }
+      if (e.key === 'n' || e.key === 'N') { setPencilMode((p) => !p); e.preventDefault(); return; }
+      if (e.key === 'h' || e.key === 'H') { handleHint(); e.preventDefault(); return; }
+      if (e.key === ' ') { togglePause(); e.preventDefault(); return; }
       if (e.key >= '1' && e.key <= '9') { setActiveDigit(parseInt(e.key, 10)); e.preventDefault(); }
       else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { setActiveDigit(0); e.preventDefault(); }
       else if (e.key === 'ArrowRight' && selected !== null && selected % 9 < 8) setSelected(selected + 1);
@@ -143,7 +284,7 @@ export default function PuzzlePlay() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selected, result, gameOver, paused]);
+  }, [selected, result, gameOver, paused, history]);
 
   const restart = async () => {
     try {
@@ -153,6 +294,7 @@ export default function PuzzlePlay() {
       setValue(puzzle.puzzle);
       setWrongSet(new Set());
       setLockedSet(new Set());
+      setNotes(new Map());
       setLives(MAX_LIVES);
       setGameOver(false);
       setResult(null);
@@ -161,20 +303,17 @@ export default function PuzzlePlay() {
       setActiveDigit(null);
       setPaused(false);
       setPausedSeconds(0);
+      setHistory([]);
+      setHintsUsed(0);
+      clearProgress(id);
     } catch (e) {
       setError(e.message);
     }
   };
 
   const submit = async () => {
-    if (value.includes('0')) {
-      setError('Осталось заполнить ещё несколько клеток 🙂');
-      return;
-    }
-    if (wrongSet.size > 0) {
-      setError('Есть ошибки — исправь красные клетки');
-      return;
-    }
+    if (value.includes('0')) { setError('Осталось заполнить ещё несколько клеток'); return; }
+    if (wrongSet.size > 0) { setError('Есть ошибки — исправь красные клетки'); return; }
     setError('');
     setSubmitting(true);
     try {
@@ -182,7 +321,7 @@ export default function PuzzlePlay() {
       setResult(res);
       if (res.ok) {
         sfx.win();
-        // Запрашиваем перцентиль
+        clearProgress(id);
         api.compareOnPuzzle(id).then(setCompare).catch(() => {});
       }
     } catch (e) {
@@ -201,12 +340,13 @@ export default function PuzzlePlay() {
     <div className="space-y-4 max-w-[560px] mx-auto">
       <Confetti show={result?.ok} />
 
+      {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-lg font-bold truncate">{puzzle?.title}</h1>
+          <h1 className="text-lg font-bold truncate">{puzzle?.title || puzzle?.difficulty}</h1>
           <div className="flex gap-1.5 mt-1">
             <span className="chip">{puzzle?.difficulty}</span>
-            <span className="chip">{puzzle?.kind}</span>
+            {hintsUsed > 0 && <span className="chip">💡×{hintsUsed}</span>}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -220,8 +360,8 @@ export default function PuzzlePlay() {
             <button
               type="button"
               onClick={togglePause}
-              className="w-8 h-8 rounded-lg bg-paper-200 text-paper-900 flex items-center justify-center active:scale-95 transition"
-              title={paused ? 'Продолжить' : 'Пауза'}
+              className="w-8 h-8 rounded-lg bg-paper-200 flex items-center justify-center active:scale-95 transition"
+              title="Пауза (Space)"
             >
               {paused ? '▶' : '⏸'}
             </button>
@@ -229,10 +369,11 @@ export default function PuzzlePlay() {
         </div>
       </div>
 
+      {/* Hint mode toggle */}
       <div className="flex items-center justify-between card p-3 text-sm">
         <div>
-          <div className="font-medium">💡 Подсветка одинаковых цифр</div>
-          <div className="text-xs text-paper-600">Очки за решение ×0.5</div>
+          <div className="font-medium">💡 Подсветка одинаковых</div>
+          <div className="text-xs text-paper-600">Очки ×0.5</div>
         </div>
         <button
           type="button"
@@ -243,6 +384,7 @@ export default function PuzzlePlay() {
         </button>
       </div>
 
+      {/* Grid */}
       <div className="relative">
         <SudokuGrid
           puzzle={puzzle?.puzzle || ''}
@@ -254,25 +396,34 @@ export default function PuzzlePlay() {
           hintMode={hintMode}
           activeDigit={activeDigit}
           disabled={!!result || gameOver || paused}
+          notes={notes}
         />
         {paused && (
           <div className="absolute inset-0 rounded-2xl bg-paper-50/95 backdrop-blur flex flex-col items-center justify-center space-y-3">
             <p className="text-5xl">⏸</p>
             <p className="text-lg font-bold">Пауза</p>
-            <p className="text-sm text-paper-600">Таймер остановлен</p>
             <button className="btn px-5 mt-2" onClick={togglePause}>Продолжить</button>
           </div>
         )}
       </div>
 
+      {/* Controls */}
       {!result && !gameOver && !paused && (
         <>
-          <NumberPad onInput={handleNumPad} disabled={false} activeDigit={activeDigit} value={correctValue} />
+          <NumberPad
+            onInput={handleNumPad}
+            activeDigit={activeDigit}
+            value={correctValue}
+            pencilMode={pencilMode}
+            onTogglePencil={() => setPencilMode(!pencilMode)}
+            onUndo={undo}
+            onHint={handleHint}
+          />
           <div className="flex gap-2 justify-center pt-1 flex-wrap">
-            <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>↻ Начать заново</button>
-            <button className="btn-danger px-4 py-2 text-sm" onClick={() => setGameOver(true)}>Завершить игру</button>
+            <button className="btn-ghost px-4 py-2 text-sm" onClick={restart}>↻ Заново</button>
+            <button className="btn-danger px-4 py-2 text-sm" onClick={() => setGameOver(true)}>Завершить</button>
             <button className="btn px-6 py-2.5" onClick={submit} disabled={submitting}>
-              {submitting ? 'Проверяю…' : 'Готово'}
+              {submitting ? '…' : 'Готово'}
             </button>
           </div>
         </>
@@ -285,7 +436,7 @@ export default function PuzzlePlay() {
           <p className="text-4xl">💔</p>
           <p className="text-xl font-bold">Жизни закончились</p>
           <div className="flex gap-2 justify-center pt-2">
-            <button className="btn-ghost" onClick={() => nav('/puzzles')}>К списку</button>
+            <button className="btn-ghost" onClick={() => nav('/sudoku')}>К списку</button>
             <button className="btn" onClick={restart}>↻ Заново</button>
           </div>
         </div>
@@ -296,24 +447,20 @@ export default function PuzzlePlay() {
           {result.ok ? (
             <>
               <p className="text-4xl">🎉</p>
-              <p className="text-xl font-bold">Красавчик!</p>
-              <p className="text-paper-600 text-sm">
-                Время: {Math.floor(result.durationSeconds / 60)}:{String(result.durationSeconds % 60).padStart(2, '0')}
-              </p>
-              <p className="text-2xl font-bold">+{result.points} pts</p>
-              {compare?.percentile !== null && compare?.percentile !== undefined && (
-                <p className="text-sm text-paper-700">
-                  🚀 Ты быстрее {compare.percentile}% игроков на этой сложности
+              <p className="text-xl font-bold">{result.alreadySolved ? 'Уже решено' : 'Красавчик!'}</p>
+              {result.durationSeconds && (
+                <p className="text-paper-600 text-sm">
+                  Время: {Math.floor(result.durationSeconds / 60)}:{String(result.durationSeconds % 60).padStart(2, '0')}
                 </p>
               )}
-              {result.hint && <p className="text-xs text-paper-600">Подсветка включена → очки ×0.5</p>}
-              {result.bonus > 0 && <p className="text-paper-600 text-sm">+{result.bonus} бонус</p>}
-              <p className="text-sm text-paper-600">Ранг: {result.rank} · Всего: {result.totalPoints}</p>
-              {result.newAchievements?.length > 0 && (
-                <p className="text-sm">✨ {result.newAchievements.join(', ')}</p>
+              {result.points && <p className="text-2xl font-bold">+{result.points} pts</p>}
+              {compare?.percentile != null && (
+                <p className="text-sm text-paper-700">🚀 Быстрее {compare.percentile}% игроков</p>
               )}
+              {hintsUsed > 0 && <p className="text-xs text-paper-600">Подсказок: {hintsUsed} (−20% за каждую)</p>}
+              {result.hint && <p className="text-xs text-paper-600">Подсветка → очки ×0.5</p>}
               <div className="flex gap-2 justify-center pt-2">
-                <button className="btn-ghost" onClick={() => nav('/puzzles')}>К списку</button>
+                <button className="btn-ghost" onClick={() => nav('/sudoku')}>К списку</button>
                 <button className="btn" onClick={() => nav('/leaderboard')}>Топ</button>
               </div>
             </>
@@ -321,7 +468,7 @@ export default function PuzzlePlay() {
             <>
               <p className="text-4xl">😅</p>
               <p className="text-xl font-bold">Почти!</p>
-              <button className="btn-ghost mt-2" onClick={() => setResult(null)}>Попробовать ещё</button>
+              <button className="btn-ghost mt-2" onClick={() => setResult(null)}>Ещё раз</button>
             </>
           )}
         </div>

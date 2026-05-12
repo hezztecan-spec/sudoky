@@ -63,14 +63,23 @@ router.post('/challenge/:id/accept', authRequired, async (req, res) => {
 
 // Отклонить вызов
 router.post('/challenge/:id/decline', authRequired, async (req, res) => {
-  await db.query(
-    `UPDATE game_sessions SET status='declined' WHERE id=$1 AND player2_id=$2 AND status='pending'`,
+  const { rows: sessionRows } = await db.query(
+    `SELECT * FROM game_sessions WHERE id=$1 AND player2_id=$2 AND status='pending'`,
     [req.params.id, req.user.id]
   );
-  const { rows } = await db.query(`SELECT player1_id FROM game_sessions WHERE id=$1`, [req.params.id]);
-  if (rows[0]) {
-    sendToUser(rows[0].player1_id, { type: 'challenge_declined', sessionId: req.params.id });
-  }
+  if (!sessionRows[0]) return res.status(404).json({ error: 'Вызов не найден' });
+
+  await db.query(
+    `UPDATE game_sessions SET status='declined' WHERE id=$1`,
+    [req.params.id]
+  );
+
+  sendToUser(sessionRows[0].player1_id, {
+    type: 'challenge_declined',
+    sessionId: req.params.id,
+    by: { id: req.user.id, username: req.user.username },
+  });
+
   res.json({ ok: true });
 });
 

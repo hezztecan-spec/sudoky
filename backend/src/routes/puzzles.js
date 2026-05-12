@@ -93,6 +93,36 @@ router.post('/:id/check', authRequired, checkLimiter, async (req, res) => {
   res.json({ correct });
 });
 
+// Подсказка: возвращает одну правильную цифру для указанной клетки или первой пустой
+router.post('/:id/hint', authRequired, async (req, res) => {
+  const { rows } = await db.query(`SELECT puzzle, solution FROM puzzles WHERE id=$1`, [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Не найдено' });
+  const { puzzle, solution } = rows[0];
+
+  const filled = String(req.body?.value || puzzle);
+  const idx = parseInt(req.body?.index, 10);
+
+  let hintIdx = null;
+  if (idx >= 0 && idx < 81 && puzzle[idx] === '0' && filled[idx] === '0') {
+    hintIdx = idx;
+  } else {
+    const emptyIndices = [];
+    for (let i = 0; i < 81; i++) {
+      if (puzzle[i] === '0' && (!filled[i] || filled[i] === '0')) emptyIndices.push(i);
+    }
+    if (emptyIndices.length === 0) return res.status(400).json({ error: 'Всё заполнено' });
+    hintIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  }
+
+  // Инкрементируем hints_used
+  await db.query(
+    `UPDATE attempts SET hints_used = COALESCE(hints_used, 0) + 1 WHERE user_id=$1 AND puzzle_id=$2 AND is_solved=FALSE`,
+    [req.user.id, req.params.id]
+  );
+
+  res.json({ index: hintIdx, value: solution[hintIdx] });
+});
+
 // Reset attempt
 router.post('/:id/reset', authRequired, async (req, res) => {
   await db.query(

@@ -1,12 +1,11 @@
-// Сетка судоку.
-// hintMode + activeDigit — подсвечивает ВСЕ клетки с цифрой activeDigit (fixed, locked, user-placed).
+// Сетка судоку с поддержкой заметок (pencil marks).
+// notes = Map<index, Set<number>> — маленькие цифры-кандидаты.
 
-export default function SudokuGrid({ puzzle, value, selected, setSelected, wrongSet, lockedSet, hintMode, activeDigit, disabled }) {
+export default function SudokuGrid({ puzzle, value, selected, setSelected, wrongSet, lockedSet, hintMode, activeDigit, disabled, notes }) {
   const selRow = selected != null ? Math.floor(selected / 9) : -1;
   const selCol = selected != null ? selected % 9 : -1;
   const selBox = selected != null ? Math.floor(selRow / 3) * 3 + Math.floor(selCol / 3) : -1;
 
-  // Подсветка: по activeDigit (выбранная цифра на панели)
   const highlightVal = hintMode && activeDigit && activeDigit !== 0 ? String(activeDigit) : null;
 
   return (
@@ -23,9 +22,9 @@ export default function SudokuGrid({ puzzle, value, selected, setSelected, wrong
         const sameRow = row === selRow && !isSelected;
         const sameCol = col === selCol && !isSelected;
         const sameBox = box === selBox && !isSelected && !sameRow && !sameCol;
-        // Подсвечиваем ВСЕ клетки с этой цифрой (включая fixed)
         const sameValHint = highlightVal && ch === highlightVal;
         const isWrong = wrongSet?.has(idx);
+        const cellNotes = notes?.get(idx);
 
         let cls = 'sudoku-cell';
         if (isFixed && !sameValHint) cls += ' fixed';
@@ -48,7 +47,21 @@ export default function SudokuGrid({ puzzle, value, selected, setSelected, wrong
             role="gridcell"
             onClick={() => !disabled && setSelected(idx)}
           >
-            {ch}
+            {ch ? (
+              ch
+            ) : cellNotes && cellNotes.size > 0 ? (
+              <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-[1px]">
+                {[1,2,3,4,5,6,7,8,9].map((n) => (
+                  <span
+                    key={n}
+                    className={`flex items-center justify-center text-[8px] sm:text-[10px] leading-none
+                      ${cellNotes.has(n) ? 'text-paper-600' : 'text-transparent'}`}
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         );
       })}

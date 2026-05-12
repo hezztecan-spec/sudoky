@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../store';
 import { getMuted, setMuted } from '../sfx';
+import { useTheme } from '../useTheme';
 import { LineChart, BarChart } from '../components/Chart';
 
 export default function Profile() {
@@ -13,6 +14,7 @@ export default function Profile() {
   const [timeline, setTimeline] = useState([]);
   const [byDiff, setByDiff] = useState([]);
   const [muted, setMutedState] = useState(getMuted());
+  const { dark, toggle: toggleTheme } = useTheme();
 
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState('');
@@ -104,15 +106,33 @@ export default function Profile() {
         )}
 
         {/* Settings row */}
-        <div className="flex items-center justify-between pt-2 border-t border-paper-200">
-          <span className="text-sm">🔊 Звуки и вибрация</span>
-          <button
-            type="button"
-            className={`shrink-0 w-12 h-7 rounded-full transition relative ${!muted ? 'bg-black' : 'bg-paper-300'}`}
-            onClick={toggleMute}
-          >
-            <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all ${!muted ? 'left-[22px]' : 'left-0.5'}`} />
-          </button>
+        <div className="flex flex-col gap-3 pt-2 border-t border-paper-200 dark:border-white/10">
+          {user.streak > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm">🔥 Серия дней</span>
+              <span className="font-bold">{user.streak}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-sm">🔊 Звуки и вибрация</span>
+            <button
+              type="button"
+              className={`shrink-0 w-12 h-7 rounded-full transition relative ${!muted ? 'bg-black dark:bg-white' : 'bg-paper-300 dark:bg-paper-700'}`}
+              onClick={toggleMute}
+            >
+              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white dark:bg-black shadow transition-all ${!muted ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">🌙 Тёмная тема</span>
+            <button
+              type="button"
+              className={`shrink-0 w-12 h-7 rounded-full transition relative ${dark ? 'bg-black dark:bg-white' : 'bg-paper-300 dark:bg-paper-700'}`}
+              onClick={toggleTheme}
+            >
+              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white dark:bg-black shadow transition-all ${dark ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
         </div>
       </div>
 
