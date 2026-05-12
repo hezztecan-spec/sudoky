@@ -15,9 +15,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-paper-300 bg-white/90 backdrop-blur">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-2">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl">🧩</span>
-          <span className="font-bold tracking-tight">играй.лето</span>
+        <Link to="/" className="flex items-center gap-1.5 shrink-0">
+          <span className="text-base">🧩</span>
+          <span className="font-bold tracking-tight text-sm">играй.лето</span>
         </Link>
 
         <div className="hidden sm:flex items-center gap-1.5 ml-3 text-xs text-paper-600">

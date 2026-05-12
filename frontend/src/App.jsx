@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import MobileNav from './components/MobileNav';
 import InstallPrompt from './components/InstallPrompt';
 import ChallengePopup from './components/ChallengePopup';
 import Home from './pages/Home';
@@ -81,7 +80,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <MobileNav />
     </div>
   );
 }
