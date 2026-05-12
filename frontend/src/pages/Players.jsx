@@ -53,7 +53,9 @@ export default function Players() {
               <p className="text-xs text-paper-600">{u.rank} · {u.total_points} pts</p>
             </div>
             {onlineIds.has(u.id) && (
-              <span className="text-xs text-emerald-600 font-medium shrink-0">онлайн</span>
+              <span className="text-xs text-emerald-600 font-medium shrink-0">
+                {online.find((o) => o.id === u.id)?.status || 'онлайн'}
+              </span>
             )}
           </Link>
         ))}

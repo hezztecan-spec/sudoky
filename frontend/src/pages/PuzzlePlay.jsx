@@ -6,6 +6,7 @@ import NumberPad from '../components/NumberPad';
 import Timer from '../components/Timer';
 import Confetti from '../components/Confetti';
 import { sfx } from '../sfx';
+import { sendStatus } from '../useStatus';
 
 const MAX_LIVES = 3;
 const STORAGE_PREFIX = 'sudoku_progress_';
@@ -111,6 +112,18 @@ export default function PuzzlePlay() {
     initing.current = true;
     loadPuzzle();
   }, [loadPuzzle]);
+
+  // Фоновая мелодия
+  useEffect(() => {
+    if (!puzzle || paused || result || gameOver || loading) {
+      sfx.bgStop();
+      sendStatus(null);
+      return;
+    }
+    sfx.bgStart();
+    sendStatus('играет в судоку 🧩');
+    return () => { sfx.bgStop(); sendStatus(null); };
+  }, [puzzle, paused, result, gameOver, loading]);
 
   // При уходе со страницы — ставим на паузу (чтобы время не шло)
   useEffect(() => {

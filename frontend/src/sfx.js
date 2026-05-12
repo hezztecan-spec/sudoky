@@ -97,4 +97,95 @@ export const sfx = {
     beep(330, 0.2, 'sawtooth', 0.2);
     setTimeout(() => beep(220, 0.3, 'sawtooth', 0.2), 150);
   },
+
+  // Фоновая спокойная мелодия (лупится пока играет)
+  _bgInterval: null,
+  _bgPlaying: false,
+
+  bgStart() {
+    if (this._bgPlaying) return;
+    this._bgPlaying = true;
+    const melody = [
+      // Спокойная пентатоника: C D E G A (октава 4)
+      { f: 262, d: 0.6 }, { f: 294, d: 0.6 }, { f: 330, d: 0.8 },
+      { f: 392, d: 0.6 }, { f: 440, d: 0.8 }, { f: 392, d: 0.6 },
+      { f: 330, d: 0.8 }, { f: 294, d: 0.6 }, { f: 262, d: 1.0 },
+      { f: 0, d: 0.8 }, // пауза
+      { f: 330, d: 0.6 }, { f: 392, d: 0.6 }, { f: 440, d: 0.8 },
+      { f: 523, d: 0.6 }, { f: 440, d: 0.8 }, { f: 392, d: 0.6 },
+      { f: 330, d: 0.8 }, { f: 262, d: 1.0 },
+      { f: 0, d: 1.2 }, // пауза
+    ];
+    let i = 0;
+    const play = () => {
+      if (!this._bgPlaying) return;
+      const note = melody[i % melody.length];
+      if (note.f > 0) {
+        beep(note.f, note.d * 0.9, 'sine', 0.08);
+      }
+      i++;
+      this._bgInterval = setTimeout(play, note.d * 700);
+    };
+    play();
+  },
+
+  bgStop() {
+    this._bgPlaying = false;
+    if (this._bgInterval) { clearTimeout(this._bgInterval); this._bgInterval = null; }
+  },
+
+  // Морской бой
+  splash() {
+    // Плеск воды — шум
+    if (vol() === 0) return;
+    try {
+      const c = getCtx();
+      const bufferSize = c.sampleRate * 0.15;
+      const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      const gain = c.createGain();
+      gain.gain.value = 0.15 * vol();
+      const filter = c.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      source.connect(filter).connect(gain).connect(c.destination);
+      source.start();
+    } catch {}
+  },
+
+  explosion() {
+    // Взрыв — низкий шум + тон
+    if (vol() === 0) return;
+    beep(80, 0.3, 'sawtooth', 0.35);
+    setTimeout(() => beep(60, 0.4, 'square', 0.2), 50);
+    try {
+      const c = getCtx();
+      const bufferSize = c.sampleRate * 0.3;
+      const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+      }
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      const gain = c.createGain();
+      gain.gain.value = 0.25 * vol();
+      source.connect(gain).connect(c.destination);
+      source.start();
+    } catch {}
+    vibrate([50, 30, 80]);
+  },
+
+  shipSunk() {
+    // Корабль потоплен
+    beep(150, 0.2, 'sawtooth', 0.3);
+    setTimeout(() => beep(100, 0.4, 'sawtooth', 0.25), 150);
+    setTimeout(() => beep(70, 0.5, 'sawtooth', 0.2), 350);
+    vibrate([60, 40, 60, 40, 100]);
+  },
 };

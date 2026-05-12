@@ -18,6 +18,7 @@ import TicTacToe from './pages/TicTacToe';
 import GameRoom from './pages/GameRoom';
 import Reaction from './pages/Reaction';
 import Memory from './pages/Memory';
+import Feed from './pages/Feed';
 import Wordle from './pages/Wordle';
 import Battleship from './pages/Battleship';
 import { useAuth } from './store';
@@ -41,7 +42,7 @@ export default function App() {
       <Navbar />
       <InstallPrompt />
       <ChallengePopup />
-      <main className="max-w-6xl mx-auto px-3 sm:px-4 pb-28 pt-6 safe-bottom">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 pb-28 pt-6 safe-bottom page-transition">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
           <Route path="/players" element={<Protected><Players /></Protected>} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
+          <Route path="/feed" element={<Protected><Feed /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/users/:id" element={<Protected><PublicProfile /></Protected>} />
           <Route path="/admin" element={<Protected admin><Admin /></Protected>} />

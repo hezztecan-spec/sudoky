@@ -33,6 +33,7 @@ export default function Navbar() {
           <NavLink to="/games" className={linkClass}>Мини-игры</NavLink>
           <NavLink to="/leaderboard" className={linkClass}>Рейтинг</NavLink>
           <NavLink to="/players" className={linkClass}>Игроки</NavLink>
+          <NavLink to="/feed" className={linkClass}>Лента</NavLink>
           <NavLink to="/chat" className={linkClass}>Чат</NavLink>
           {user && <NavLink to="/profile" className={linkClass}>Я</NavLink>}
           {user?.is_admin && <NavLink to="/admin" className={linkClass}>Админ</NavLink>}

@@ -9,6 +9,7 @@ function ensureConnection() {
   if (globalWs && (globalWs.readyState === 0 || globalWs.readyState === 1)) return globalWs;
   try {
     globalWs = new WebSocket(wsUrlWithToken());
+    window.__sudokuWs = globalWs;
     globalWs.onmessage = (e) => {
       let data;
       try { data = JSON.parse(e.data); } catch { return; }

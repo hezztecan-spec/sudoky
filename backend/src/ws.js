@@ -5,7 +5,7 @@ const whatsapp = require('./whatsapp');
 let wssClients = null;
 let wssWorker = null;
 const clients = new Set();
-const online = new Map(); // userId -> { username, count }
+const online = new Map(); // userId -> { username, count, status }
 
 function initWebSocket(server) {
   wssClients = new WebSocketServer({ noServer: true });
@@ -58,6 +58,16 @@ function initWebSocket(server) {
         });
         ws.on('error', () => clients.delete(ws));
 
+        ws.on('message', (raw) => {
+          try {
+            const msg = JSON.parse(raw.toString());
+            if (msg.type === 'set_status' && user) {
+              const cur = online.get(user.id);
+              if (cur) { cur.status = msg.status || null; broadcastOnline(); }
+            }
+          } catch {}
+        });
+
         ws.send(JSON.stringify({
           type: 'hello',
           user: user ? { id: user.id, username: user.username } : null,
@@ -72,7 +82,7 @@ function initWebSocket(server) {
 }
 
 function onlinePayload() {
-  return Array.from(online.entries()).map(([id, v]) => ({ id, username: v.username }));
+  return Array.from(online.entries()).map(([id, v]) => ({ id, username: v.username, status: v.status || null }));
 }
 
 function broadcastOnline() {

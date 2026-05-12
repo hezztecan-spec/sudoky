@@ -73,6 +73,16 @@ export const api = {
   friends: () => request('/friends'),
   addFriend: (username) => request('/friends/add', { method: 'POST', body: { username } }),
   removeFriend: (friendId) => request('/friends/remove', { method: 'POST', body: { friendId } }),
+
+  // feed
+  feed: () => request('/feed'),
+
+  // admin users
+  adminUsers: () => request('/admin/users'),
+  adminGetUser: (id) => request(`/admin/users/${id}`),
+  adminUpdateUser: (id, body) => request(`/admin/users/${id}`, { method: 'PATCH', body }),
+  adminDeleteUser: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
+  adminResetPoints: (id) => request(`/admin/users/${id}/reset-points`, { method: 'POST' }),
 };
 
 export function wsUrlWithToken() {
