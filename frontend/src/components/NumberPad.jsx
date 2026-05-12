@@ -29,7 +29,7 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
               type="button"
               disabled={exhausted}
               onClick={() => onInput(n)}
-              className={`relative aspect-[4/3] rounded-xl font-bold text-2xl
+              className={`relative aspect-[5/3] rounded-xl font-bold text-2xl
                          active:scale-[0.96] transition
                          ${exhausted ? 'opacity-15 cursor-not-allowed bg-paper-100' : ''}
                          ${!exhausted && activeDigit === n ? 'bg-black text-white ring-2 ring-black ring-offset-2' : ''}
@@ -52,7 +52,7 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
           type="button"
           onClick={onUndo}
           disabled={undoDisabled}
-          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+          className="aspect-[5/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
           title="Отменить (1 раз)"
         >
           ↩
@@ -60,7 +60,7 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
         <button
           type="button"
           onClick={() => onInput(0)}
-          className={`aspect-[4/3] rounded-xl border border-paper-300 text-paper-700 hover:bg-paper-100 active:scale-95 transition flex items-center justify-center text-lg
+          className={`aspect-[5/3] rounded-xl border border-paper-300 text-paper-700 hover:bg-paper-100 active:scale-95 transition flex items-center justify-center text-lg
                      ${activeDigit === 0 ? 'bg-paper-300 ring-2 ring-black ring-offset-1' : 'bg-white'}`}
           title="Стереть"
         >
@@ -69,7 +69,7 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
         <button
           type="button"
           onClick={onTogglePencil}
-          className={`aspect-[4/3] rounded-xl active:scale-95 transition flex items-center justify-center text-lg
+          className={`aspect-[5/3] rounded-xl active:scale-95 transition flex items-center justify-center text-lg
                      ${pencilMode ? 'bg-black text-white' : 'bg-paper-200 text-paper-700 hover:bg-paper-300'}`}
           title="Карандаш (заметки)"
         >
@@ -79,7 +79,7 @@ export default function NumberPad({ onInput, activeDigit, value, pencilMode, onT
           type="button"
           onClick={onHint}
           disabled={hintDisabled}
-          className="aspect-[4/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+          className="aspect-[5/3] rounded-xl bg-paper-200 text-paper-700 hover:bg-paper-300 active:scale-95 transition flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed"
           title="Подсказка (1 раз)"
         >
           💡

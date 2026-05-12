@@ -112,6 +112,18 @@ export default function PuzzlePlay() {
     loadPuzzle();
   }, [loadPuzzle]);
 
+  // При уходе со страницы — ставим на паузу (чтобы время не шло)
+  useEffect(() => {
+    const onVisChange = () => {
+      if (document.hidden && !paused && !result && !gameOver) {
+        pauseStart.current = Date.now();
+        setPaused(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => document.removeEventListener('visibilitychange', onVisChange);
+  }, [paused, result, gameOver]);
+
   const togglePause = () => {
     if (result || gameOver) return;
     if (paused) {
