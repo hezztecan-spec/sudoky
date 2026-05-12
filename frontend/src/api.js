@@ -56,12 +56,13 @@ export const api = {
   myByDifficulty: () => request('/stats/me/by-difficulty'),
   compareOnPuzzle: (puzzleId) => request(`/stats/compare/${puzzleId}`),
 
-  // duels
-  createDuel: (difficulty) => request('/duels', { method: 'POST', body: { difficulty } }),
-  getDuel: (id) => request(`/duels/${id}`),
-  joinDuel: (id) => request(`/duels/${id}/join`, { method: 'POST' }),
-  finishDuel: (id, solution) => request(`/duels/${id}/finish`, { method: 'POST', body: { solution } }),
-  duelProgress: (id, filled) => request(`/duels/${id}/progress`, { method: 'POST', body: { filled } }),
+  // games
+  challenge: (opponentId, gameType) => request('/games/challenge', { method: 'POST', body: { opponentId, gameType } }),
+  acceptChallenge: (id) => request(`/games/challenge/${id}/accept`, { method: 'POST' }),
+  declineChallenge: (id) => request(`/games/challenge/${id}/decline`, { method: 'POST' }),
+  getSession: (id) => request(`/games/session/${id}`),
+  makeMove: (id, move) => request(`/games/session/${id}/move`, { method: 'POST', body: { move } }),
+  gameLeaderboard: (gameType) => request(`/games/leaderboard/${gameType}`, { auth: false }),
 };
 
 export function wsUrlWithToken() {

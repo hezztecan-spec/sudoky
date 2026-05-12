@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import InstallPrompt from './components/InstallPrompt';
+import ChallengePopup from './components/ChallengePopup';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import PuzzleList from './pages/PuzzleList';
@@ -11,13 +12,15 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Chat from './pages/Chat';
 import Admin from './pages/Admin';
-import DuelCreate from './pages/DuelCreate';
-import DuelRoom from './pages/DuelRoom';
+import TicTacToe from './pages/TicTacToe';
+import GameRoom from './pages/GameRoom';
+import Reaction from './pages/Reaction';
+import Memory from './pages/Memory';
 import { useAuth } from './store';
 
 function Protected({ children, admin }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="p-10 text-center text-ink-400">Загрузка…</div>;
+  if (loading) return <div className="p-10 text-center text-paper-500">Загрузка…</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (admin && !user.is_admin) return <Navigate to="/" replace />;
   return children;
@@ -31,6 +34,7 @@ export default function App() {
     <div className="min-h-full">
       <Navbar />
       <InstallPrompt />
+      <ChallengePopup />
       <main className="max-w-6xl mx-auto px-3 sm:px-4 pb-28 pt-6 safe-bottom">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -42,8 +46,10 @@ export default function App() {
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/users/:id" element={<Protected><PublicProfile /></Protected>} />
           <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
-          <Route path="/duel" element={<Protected><DuelCreate /></Protected>} />
-          <Route path="/duel/:id" element={<Protected><DuelRoom /></Protected>} />
+          <Route path="/tictactoe" element={<Protected><TicTacToe /></Protected>} />
+          <Route path="/game/:id" element={<Protected><GameRoom /></Protected>} />
+          <Route path="/reaction" element={<Protected><Reaction /></Protected>} />
+          <Route path="/memory" element={<Protected><Memory /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

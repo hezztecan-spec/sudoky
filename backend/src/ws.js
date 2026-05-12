@@ -88,6 +88,15 @@ function broadcast(event) {
   }
 }
 
+function sendToUser(userId, event) {
+  const payload = JSON.stringify(event);
+  for (const client of clients) {
+    if (client.readyState === 1 && client.user && client.user.id === userId) {
+      try { client.send(payload); } catch { /* ignore */ }
+    }
+  }
+}
+
 function getOnline() { return onlinePayload(); }
 
-module.exports = { initWebSocket, broadcast, getOnline };
+module.exports = { initWebSocket, broadcast, sendToUser, getOnline };

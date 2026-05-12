@@ -16,8 +16,8 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 border-b border-paper-300 bg-white/90 backdrop-blur">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-2">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl">🧩</span>
-          <span className="font-bold tracking-tight">sudoku.лето</span>
+          <span className="text-xl">🎮</span>
+          <span className="font-bold tracking-tight">играй.лето</span>
         </Link>
 
         <div className="hidden sm:flex items-center gap-1.5 ml-3 text-xs text-paper-600">
@@ -29,9 +29,7 @@ export default function Navbar() {
         </div>
 
         <nav className="ml-auto flex items-center gap-1 overflow-x-auto no-scrollbar">
-          <NavLink to="/puzzles" className={linkClass}>Играть</NavLink>
-          <NavLink to="/duel" className={linkClass}>⚔️ Дуэль</NavLink>
-          <NavLink to="/leaderboard" className={linkClass}>Топ</NavLink>
+          <NavLink to="/" className={linkClass} end>Игры</NavLink>
           <NavLink to="/chat" className={linkClass}>Чат</NavLink>
           {user && <NavLink to="/profile" className={linkClass}>Я</NavLink>}
           {user?.is_admin && <NavLink to="/admin" className={linkClass}>Админ</NavLink>}
