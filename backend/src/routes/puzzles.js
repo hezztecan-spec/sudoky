@@ -241,7 +241,7 @@ router.post('/:id/submit', authRequired, submitLimiter, async (req, res) => {
 
   // Начисляем монеты (1 монета за каждые 10 очков)
   const coinsEarned = Math.max(1, Math.round(points / 10));
-  await db.query('UPDATE users SET coins = coins + $1 WHERE id=$2', [coinsEarned, req.user.id]);
+  await db.query('UPDATE users SET coins = COALESCE(coins, 0) + $1 WHERE id=$2', [coinsEarned, req.user.id]);
 
   res.json({ ok: true, points, bonus, hint, durationSeconds, totalPoints: totalPoints + bonus, rank: newRank, newAchievements: granted, coins: coinsEarned });
 });

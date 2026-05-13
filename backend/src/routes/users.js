@@ -39,7 +39,7 @@ router.get('/me', authRequired, async (req, res) => {
     id: u.id, phone: u.phone, username: u.username, is_admin: u.is_admin,
     total_points: u.total_points, total_solved: u.total_solved, best_time: u.best_time,
     rank: u.rank, avatar_color: u.avatar_color, picture: u.picture, created_at: u.created_at,
-    streak, level: levelInfo(u.total_points),
+    streak, coins: u.coins || 0, level: levelInfo(u.total_points),
   });
 });
 

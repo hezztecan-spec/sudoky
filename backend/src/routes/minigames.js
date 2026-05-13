@@ -16,7 +16,7 @@ router.post('/reaction/submit', authRequired, async (req, res) => {
     `INSERT INTO game_scores (user_id, game_type, points) VALUES ($1,'reaction',$2)`,
     [req.user.id, points]
   );
-  await db.query('UPDATE users SET coins = coins + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
+  await db.query('UPDATE users SET coins = COALESCE(coins, 0) + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
 
   addToFeed(req.user.id, 'won_game', { gameType: 'реакция', detail: `${avgMs}мс` });
 
@@ -38,7 +38,7 @@ router.post('/memory/submit', authRequired, async (req, res) => {
     `INSERT INTO game_scores (user_id, game_type, points) VALUES ($1,'memory',$2)`,
     [req.user.id, points]
   );
-  await db.query('UPDATE users SET coins = coins + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
+  await db.query('UPDATE users SET coins = COALESCE(coins, 0) + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
 
   addToFeed(req.user.id, 'won_game', { gameType: 'память', detail: `${moves} ходов, ${seconds}с` });
 
@@ -62,7 +62,7 @@ router.post('/wordle/submit', authRequired, async (req, res) => {
       `INSERT INTO game_scores (user_id, game_type, points) VALUES ($1,'wordle',$2)`,
       [req.user.id, points]
     );
-    await db.query('UPDATE users SET coins = coins + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
+    await db.query('UPDATE users SET coins = COALESCE(coins, 0) + $1 WHERE id=$2', [Math.max(1, Math.round(points / 5)), req.user.id]);
     addToFeed(req.user.id, 'won_game', { gameType: 'слова', detail: `за ${attempts} попыток` });
   }
 
