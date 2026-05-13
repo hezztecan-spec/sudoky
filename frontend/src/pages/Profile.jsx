@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../store';
 import { getVolume, setVolume } from '../sfx';
 import { useTheme } from '../useTheme';
+import { requestPushPermission } from '../usePush';
 import { LineChart, BarChart } from '../components/Chart';
 
 export default function Profile() {
@@ -127,6 +128,18 @@ export default function Profile() {
               onClick={toggleTheme}
             >
               <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white dark:bg-black shadow transition-all ${dark ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">🔔 Push-уведомления</span>
+            <button
+              className="btn-ghost text-xs py-1 px-3"
+              onClick={async () => {
+                const ok = await requestPushPermission();
+                if (ok) alert('Уведомления включены!');
+              }}
+            >
+              {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? '✓ Включены' : 'Включить'}
             </button>
           </div>
         </div>

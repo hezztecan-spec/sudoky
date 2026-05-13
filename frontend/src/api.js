@@ -91,6 +91,11 @@ export const api = {
   // game chat
   gameChat: (sessionId, message) => request(`/games/session/${sessionId}/chat`, { method: 'POST', body: { message } }),
 
+  // push
+  getVapidKey: () => request('/push/vapid-key', { auth: false }),
+  pushSubscribe: (subscription) => request('/push/subscribe', { method: 'POST', body: { subscription } }),
+  pushUnsubscribe: (endpoint) => request('/push/unsubscribe', { method: 'POST', body: { endpoint } }),
+
   // admin users
   adminUsers: () => request('/admin/users'),
   adminGetUser: (id) => request(`/admin/users/${id}`),

@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const db = require('../db');
 const { authRequired } = require('../middleware/auth');
 const { broadcast, sendToUser } = require('../ws');
+const { sendPushToUser } = require('./push');
 
 const router = express.Router();
 
@@ -29,6 +30,14 @@ router.post('/challenge', authRequired, async (req, res) => {
     gameType,
     from: { id: req.user.id, username: req.user.username },
   });
+
+  // Push-уведомление
+  const gameNames = { tictactoe: 'Крестики-нолики', battleship: 'Морской бой', reaction: 'Реакция', memory: 'Память' };
+  sendPushToUser(opponentId, {
+    title: '⚔️ Вызов!',
+    body: `${req.user.username} зовёт тебя в ${gameNames[gameType] || gameType}`,
+    url: '/',
+  }).catch(() => {});
 
   res.json({ sessionId: id });
 });

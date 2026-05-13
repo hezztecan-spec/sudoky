@@ -26,6 +26,7 @@ import Minesweeper from './pages/Minesweeper';
 import Shop from './pages/Shop';
 import { useAuth } from './store';
 import { useTheme } from './useTheme';
+import { usePush } from './usePush';
 
 function Protected({ children, admin }) {
   const { user, loading } = useAuth();
@@ -39,6 +40,7 @@ export default function App() {
   const bootstrap = useAuth((s) => s.bootstrap);
   const initTheme = useTheme((s) => s.init);
   useEffect(() => { bootstrap(); initTheme(); }, [bootstrap, initTheme]);
+  usePush();
 
   return (
     <div className="min-h-full">

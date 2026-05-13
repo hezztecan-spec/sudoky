@@ -23,6 +23,7 @@ const friendsRoutes = require('./routes/friends');
 const feedRoutes = require('./routes/feed');
 const minigamesRoutes = require('./routes/minigames');
 const shopRoutes = require('./routes/shop');
+const pushRoutes = require('./routes/push');
 
 const app = express();
 app.use(cors({
@@ -49,6 +50,7 @@ app.use('/api/friends', friendsRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/minigames', minigamesRoutes);
 app.use('/api/shop', shopRoutes);
+app.use('/api/push', pushRoutes);
 
 app.use((err, req, res, _next) => {
   console.error(err);
