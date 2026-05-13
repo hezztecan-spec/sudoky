@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import InstallPrompt from './components/InstallPrompt';
 import ChallengePopup from './components/ChallengePopup';
+import KonamiCode from './components/KonamiCode';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import PuzzleList from './pages/PuzzleList';
@@ -47,6 +48,7 @@ export default function App() {
       <Navbar />
       <InstallPrompt />
       <ChallengePopup />
+      <KonamiCode />
       <main className="max-w-6xl mx-auto px-3 sm:px-4 pb-28 pt-6 safe-bottom page-transition">
         <Routes>
           <Route path="/" element={<Home />} />

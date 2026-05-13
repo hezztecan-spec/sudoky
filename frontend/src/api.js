@@ -55,6 +55,7 @@ export const api = {
   // stats
   myTimeline: () => request('/stats/me/timeline'),
   myByDifficulty: () => request('/stats/me/by-difficulty'),
+  myOverview: () => request('/stats/me/overview'),
   compareOnPuzzle: (puzzleId) => request(`/stats/compare/${puzzleId}`),
 
   // games

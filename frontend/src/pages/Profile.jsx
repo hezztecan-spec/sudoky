@@ -14,6 +14,7 @@ export default function Profile() {
   const [history, setHistory] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [byDiff, setByDiff] = useState([]);
+  const [overview, setOverview] = useState(null);
   const [volume, setVolumeState] = useState(getVolume());
   const { dark, toggle: toggleTheme } = useTheme();
 
@@ -27,6 +28,7 @@ export default function Profile() {
     api.history().then(setHistory).catch(() => {});
     api.myTimeline().then(setTimeline).catch(() => {});
     api.myByDifficulty().then(setByDiff).catch(() => {});
+    api.myOverview().then(setOverview).catch(() => {});
   }, []);
 
   const saveName = async () => {
@@ -97,6 +99,16 @@ export default function Profile() {
             <div className="h-2 rounded-full bg-paper-200 overflow-hidden">
               <div className="h-full bg-black transition-all" style={{ width: `${lvl.percent}%` }} />
             </div>
+          </div>
+        )}
+
+        {/* Overview stats */}
+        {overview && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-paper-200 dark:border-white/10">
+            <MiniStat icon="🧩" label="Судоку" value={overview.sudoku?.solved || 0} />
+            <MiniStat icon="🪙" label="Монеты" value={overview.coins} />
+            <MiniStat icon="⚔️" label="Побед MP" value={overview.multiplayer?.wins || 0} />
+            <MiniStat icon="🎮" label="Всего игр" value={(overview.multiplayer?.total || 0) + (overview.sudoku?.solved || 0) + overview.games?.reduce((a, g) => a + g.games, 0)} />
           </div>
         )}
 
@@ -215,6 +227,17 @@ export default function Profile() {
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+
+function MiniStat({ icon, label, value }) {
+  return (
+    <div className="text-center p-2 rounded-xl bg-paper-100 dark:bg-paper-800">
+      <p className="text-lg">{icon}</p>
+      <p className="font-bold text-sm">{value}</p>
+      <p className="text-[10px] text-paper-500">{label}</p>
     </div>
   );
 }
