@@ -125,20 +125,17 @@ router.post('/session/:id/move', authRequired, async (req, res) => {
       `UPDATE game_sessions SET state=$1, status='finished', winner_id=$2, turn_user_id=NULL, finished_at=NOW() WHERE id=$3`,
       [JSON.stringify(result.state), result.winnerId, req.params.id]
     );
-    // Начислить очки
+    // Начислить очки (только в game_scores, не в users.total_points)
     if (result.winnerId) {
       const pts = getWinPoints(session.game_type);
       await db.query(
         `INSERT INTO game_scores (user_id, game_type, points, session_id) VALUES ($1,$2,$3,$4)`,
         [result.winnerId, session.game_type, pts, req.params.id]
       );
-      await db.query(`UPDATE users SET total_points = total_points + $1 WHERE id=$2`, [pts, result.winnerId]);
     } else if (result.draw) {
       const pts = getDrawPoints(session.game_type);
       await db.query(`INSERT INTO game_scores (user_id, game_type, points, session_id) VALUES ($1,$2,$3,$4)`, [session.player1_id, session.game_type, pts, req.params.id]);
       await db.query(`INSERT INTO game_scores (user_id, game_type, points, session_id) VALUES ($1,$2,$3,$4)`, [session.player2_id, session.game_type, pts, req.params.id]);
-      await db.query(`UPDATE users SET total_points = total_points + $1 WHERE id=$2`, [pts, session.player1_id]);
-      await db.query(`UPDATE users SET total_points = total_points + $1 WHERE id=$2`, [pts, session.player2_id]);
     }
   } else {
     await db.query(
